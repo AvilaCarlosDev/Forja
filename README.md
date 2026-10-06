@@ -1,3 +1,9 @@
+<div align="center">
+
+<img src="assets/brand/forja-social.png" alt="Forja" width="720">
+
+</div>
+
 # Forja
 
 **App para coaches de gym y sus clientes**: rutinas asignadas, dietas, progreso, asistencia y control de pagos, presencial o a distancia.
