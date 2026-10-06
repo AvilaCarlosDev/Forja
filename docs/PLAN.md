@@ -30,7 +30,7 @@ App web (PWA) para **personal trainers y sus clientes**, presencial o a distanci
 |---|---|---|
 | 0. Diseño | Spec, planes, política de privacidad y términos | **Hecho** |
 | 1. Identidad | Fork, nombre, logo, iconos, colores, créditos, README | **Hecho** (en la rama, sin fusionar) |
-| 2a. Cuentas | Registro, login, recuperación, elegir Personal Trainer o Cliente, sexo | **Desplegado y conectado a Supabase**; faltan SQL, Site URL y prueba real |
+| 2a. Cuentas | Registro, login, recuperación, elegir Personal Trainer o Cliente, sexo | **Desplegado, SQL aplicado**; falta la prueba con un correo real |
 | 2b. Datos en la nube | Guardar el entrenamiento en Supabase | Pendiente |
 | 3. Gimnasios y vínculo | Lista de gimnasios, elegir entrenador, cambiarlo | Pendiente |
 | 4. Rutinas y asistencia | El entrenador asigna, el cliente ejecuta | Pendiente |
@@ -39,20 +39,21 @@ App web (PWA) para **personal trainers y sus clientes**, presencial o a distanci
 | 7. Dietas y finanzas | Funciones Pro | Pendiente |
 | 8. Lanzamiento | Dominio, correo, revisión legal, pruebas con usuarios reales | Pendiente |
 
-Lo que se puede ver hoy: https://gym-coach-client.vercel.app abre con las pantallas de entrar y crear cuenta, conectadas al Supabase real. Dentro está openGym con la marca Forja.
+Lo que se puede ver hoy: https://forja-trainer.vercel.app abre con las pantallas de entrar y crear cuenta, conectadas al Supabase real. Dentro está openGym con la marca Forja.
 
 ### Infraestructura
 
 | Pieza | Dónde | Estado (comprobado 2026-10-06) |
 |---|---|---|
 | Código | GitHub `AvilaCarlosDev/Forja`, rama `forja/fase-1` | Local y remoto iguales |
-| Frontend | Vercel, proyecto `gym-coach-client` → repo Forja, raíz `frontend`, Vite, rama de producción `forja/fase-1` | En línea (200) |
+| Frontend | Vercel, proyecto `forja` (antes `gym-coach-client`), dominio `forja-trainer.vercel.app` (`forja.vercel.app` es de otra persona) → repo Forja, raíz `frontend`, Vite, rama de producción `forja/fase-1` | En línea (200) |
 | Variables | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` en Vercel | Cargadas |
 | Backend | Supabase "Gymcoach" (`fuoheluzmkueeaiiwost`) | Reanudado; auth por correo activa con confirmación |
-| Base de datos | 14 tablas de la app anterior en `public` | **Sin archivar**; no exponen filas a la clave pública |
-| Perfiles | `public.profiles` | **No existe aún** (falta correr el SQL) |
+| Base de datos | 14 tablas de la app anterior | Archivadas en `legacy_gymcoach` (reversible) |
+| Perfiles | `public.profiles` con RLS | Creada; la clave pública no puede leerla (correcto) |
+| Auth URLs | Site URL `https://forja-trainer.vercel.app`, redirección `https://forja-trainer.vercel.app/**` | Configuradas |
 
-Notas: el dominio sigue siendo `gym-coach-client` (renombrar el proyecto cambia la URL y obliga a ajustar el Site URL). La app anterior ya no está publicada ahí; su código sigue en su repo. Hay un "Redeploy" fallido en Vercel que no afecta.
+Notas: `gym-coach-client.vercel.app` sigue funcionando como alias, pero los correos de confirmación llevan a `forja-trainer`. Respaldo previo al rediseño: etiqueta git `respaldo-2026-10-06` y `~/Forja-respaldos/forja-2026-10-06.tar.gz`. La app anterior ya no está publicada ahí; su código sigue en su repo. Hay un "Redeploy" fallido en Vercel que no afecta.
 
 ## 4. Fases que faltan, en detalle
 
@@ -65,11 +66,9 @@ Falta conectar lo ya construido.
 - [x] Revisar el proyecto Supabase "Gymcoach" (14 tablas viejas, 6 usuarios de prueba, ninguna cuenta en Auth).
 - [x] Confirmación por correo activa.
 - [x] Vercel apuntando a `frontend/` con las dos variables; desplegado.
-- [ ] Carlos ejecuta en el editor SQL `0000b_archivar_app_anterior.sql` (mueve lo viejo a `legacy_gymcoach`, reversible) y `0001_forja_profiles.sql` (perfiles, alta automática, RLS). Ya está cargado en el editor, sin ejecutar. Reemplaza al borrado de `0000_revisar_y_limpiar.sql`.
-- [ ] Supabase → Authentication → URL Configuration: Site URL `https://gym-coach-client.vercel.app`.
+- [x] Ejecutados `0000b_archivar_app_anterior.sql` y `0001_forja_profiles.sql` (2026-10-06, "Success. No rows returned"; comprobado por la API).
+- [x] Site URL `https://forja-trainer.vercel.app` y redirección `/**`.
 - [ ] Probar de punta a punta con un correo real: registro, correo de confirmación, login, recuperación de contraseña, cerrar sesión.
-
-Mientras no se corra el SQL, registrarse funciona, pero rol y sexo quedan solo en los metadatos de la cuenta.
 
 **Hecho cuando**: una persona real crea su cuenta desde la URL de Vercel y vuelve a entrar al día siguiente.
 
@@ -162,10 +161,8 @@ Decisión abierta: si un cliente **sin** entrenador puede crear sus propias ruti
 
 Por orden, lo que desbloquea más trabajo primero.
 
-1. **Supabase**: pulsar Run en el editor SQL (archivo `0000b` + `0001`) y poner el Site URL.
-2. **Probar el registro** con un correo real y contar cómo fue.
-3. **Decidir** si se renombra el proyecto de Vercel a `forja` (cambia la URL).
-4. **Revisar y fusionar** `forja/fase-1` a `main` dentro de `AvilaCarlosDev/Forja` (no hacia openGym).
+1. **Probar el registro** en https://forja-trainer.vercel.app con un correo real y contar cómo fue.
+2. **Revisar y fusionar** `forja/fase-1` a `main` dentro de `AvilaCarlosDev/Forja` (no hacia openGym).
 5. **Crear el correo** del proyecto.
 6. **Decidir** los tres puntos abiertos de la sección 7.
 
