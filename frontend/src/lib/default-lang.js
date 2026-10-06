@@ -15,6 +15,7 @@
 // device, pulled by the other, re-derived there and pushed back, round after round. `lang` is
 // only written when someone picks one in Settings, which also clears the mark.
 import { LANGS } from './i18n-core.js'
+import { FORJA_AUTH_UI } from './forja-config.js'
 
 const KEYS = Object.keys(LANGS)
 
@@ -59,7 +60,9 @@ export function effectiveLang(S, config, navLangs = browserLangs()) {
   let cfg = config
   if (!cfg) {
     const seen = cachedDefaultLang()
-    if (seen === null) return own
+    // Forja: desplegada como web estática no hay servidor de openGym que dé un idioma por
+    // defecto, así que una copia que nunca eligió sigue al navegador y, si no, va en español.
+    if (seen === null) return FORJA_AUTH_UI ? ((navLangs || []).map(matchLocale).find(Boolean) || 'es') : own
     cfg = { default_lang: seen }
   }
   return autoLang(S, cfg, navLangs) || own
