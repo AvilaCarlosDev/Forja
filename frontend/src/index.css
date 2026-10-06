@@ -19,11 +19,12 @@
 /* ---------------------------------------------------------------- tokens -- */
 :root {
   /* surfaces — dark is the default */
-  --bg:        #000000;
-  --bg-el:     #0e0e10;   /* elevated backdrop (sheets, bars) */
-  --surface:   #1c1c1e;   /* card / grouped-list fill */
-  --surface-2: #2c2c2e;   /* pressed + nested fill */
-  --surface-3: #3a3a3c;   /* controls (segmented track, switch off) */
+  /* Forja: fondos con el tinte carbón del logo (#0f1316) en vez del negro puro de openGym */
+  --bg:        #0f1316;
+  --bg-el:     #151a1e;   /* elevated backdrop (sheets, bars) */
+  --surface:   #1b2126;   /* card / grouped-list fill */
+  --surface-2: #262d33;   /* pressed + nested fill */
+  --surface-3: #323a41;   /* controls (segmented track, switch off) */
 
   /* text */
   --label:     #ffffff;
@@ -42,8 +43,8 @@
   --purple:#bf5af2; --mint:#63e6e2; --brown:#ac8e68; --grey:#8e8e93;
 
   /* accent (per-account, synced) */
-  --acc:  var(--green);
-  --acc-2:#248a3d;
+  --acc:  #ff6b1a;          /* Forja: brasa */
+  --acc-2:#c9500f;
   --on-acc:#000000;
   --acc-soft: color-mix(in srgb, var(--acc) 16%, transparent);
   --acc-line: color-mix(in srgb, var(--acc) 38%, transparent);
@@ -94,7 +95,7 @@
 /* accents — Apple's system colours, so a recolour never looks off-system */
 :root[data-accent="lime"]  { --acc:var(--green);  --acc-2:#248a3d; --on-acc:#000 }
 :root[data-accent="sky"]   { --acc:var(--blue);   --acc-2:#0060df; --on-acc:#fff }
-:root[data-accent="orange"]{ --acc:var(--orange); --acc-2:#c76b00; --on-acc:#000 }
+:root[data-accent="orange"]{ --acc:#ff6b1a; --acc-2:#c9500f; --on-acc:#000 }
 :root[data-accent="violet"]{ --acc:var(--purple); --acc-2:#8944ab; --on-acc:#fff }
 :root[data-accent="pink"]  { --acc:var(--pink);   --acc-2:#d70036; --on-acc:#fff }
 :root[data-accent="red"]   { --acc:var(--red);    --acc-2:#d70015; --on-acc:#fff }
