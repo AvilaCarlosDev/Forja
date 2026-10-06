@@ -10,12 +10,9 @@
 # upstream dataset on jsDelivr instead, pinned to a commit so the CDN can cache it forever.
 name: Deploy demo to GitHub Pages
 
+# Forja: heredado de openGym. Desactivado en el fork (solo manual) hasta adaptarlo;
+# los disparadores originales publicaban artefactos de openGym.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'frontend/**'
-      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 permissions:

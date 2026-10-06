@@ -15,10 +15,9 @@
 # api scope, so a leak could push commits but not read variables, tokens or the registry.
 name: Mirror to GitLab
 
+# Forja: heredado de openGym. Desactivado en el fork (solo manual) hasta adaptarlo;
+# los disparadores originales publicaban artefactos de openGym.
 on:
-  push:
-    branches: [main]
-    tags: ['v*']
   workflow_dispatch:
 
 permissions:
