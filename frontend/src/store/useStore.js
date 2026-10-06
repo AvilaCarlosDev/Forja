@@ -73,7 +73,7 @@ const gainedWorkoutMedia = (prev, next) => {
 }
 export const DEF = {
   unit: 'kg', restSec: 90, restPauseSec: 15, sound: true, soundOnSilent: false, timerFlash: false, timedSetOvertime: false, keepAwake: true, lang: 'en',
-  theme: 'dark', accent: 'lime', body: 'male', targetW: null,
+  theme: 'dark', accent: 'orange', forjaAccent: true, body: 'male', targetW: null,
   bodyweight: [], routines: [], week: {}, dayPlan: {},
   exWeights: {}, workouts: [], active: null, customEx: [], gifSize: 'full',
   // Stats activity heatmap metric. Profiles without this key continue to open on time.
@@ -210,6 +210,9 @@ function loadState() {
       const saved = JSON.parse(raw)
       const s = Object.assign(clone(DEF), saved)
       if (!saved.lang) s.lang = detectedLang()
+      // Forja: el verde era el valor por defecto de openGym, no una elección. Un estado guardado
+      // antes del cambio de marca pasa una sola vez al naranja; quien elija verde después lo conserva.
+      if (!saved.forjaAccent && saved.accent === 'lime') s.accent = 'orange'
       return s
     }
   } catch (e) { /* ignore */ }
