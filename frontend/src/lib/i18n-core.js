@@ -1,3 +1,4 @@
+import { brandText } from './brand.js'
 // Runtime-agnostic core of the i18n module: state, constants and readers (t, dateLocale,
 // instrFor, exerciseNameFor, getLang). Plain Node-loadable — the browser-only pieces
 // (import.meta.glob lazy
@@ -69,7 +70,7 @@ export const getVersion = () => version
 
 // Translate a source string; {0},{1}… are replaced with args (also on the English fallback).
 export function t(s, ...args) {
-  let v = dict[s] || s
+  let v = brandText(dict[s] || s)
   for (let i = 0; i < args.length; i++) v = v.replaceAll('{' + i + '}', args[i])
   return v
 }
