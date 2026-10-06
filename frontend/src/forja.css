@@ -1,0 +1,26 @@
+/* Forja: pantallas de cuenta. Solo usa los tokens de index.css. */
+.fj-auth{display:flex;flex-direction:column;justify-content:center;min-height:86vh;padding-block:24px;gap:18px}
+.fj-brand{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.fj-brand img{width:84px;height:84px;border-radius:20px}
+.fj-brand h1{font-size:32px;font-weight:700;letter-spacing:-.028em;margin:6px 0 0}
+.fj-form{display:flex;flex-direction:column;gap:12px}
+.fj-field{display:flex;flex-direction:column;gap:6px;text-align:start}
+.fj-field>label,.fj-legend{font-size:13px;color:var(--label-2);font-weight:500}
+.fj-err{font-size:13px;color:var(--red)}
+.fj-roles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fj-role{display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:start;padding:14px;border-radius:var(--r-card);
+  background:var(--surface);border:1.5px solid transparent;color:var(--label);cursor:pointer;font:inherit;min-width:0}
+.fj-role .icn{font-size:24px;color:var(--label-2)}
+.fj-role b{font-size:16px}
+.fj-role span{font-size:13px;color:var(--label-2);line-height:1.35}
+.fj-role.on{border-color:var(--acc);background:var(--acc-soft)}
+.fj-role.on .icn{color:var(--acc)}
+.fj-role:focus-visible,.fj-check input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.fj-check{display:flex;gap:10px;align-items:flex-start;text-align:start;font-size:14px;color:var(--label-2);line-height:1.4}
+.fj-check input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--acc);flex:none}
+.fj-check a,.fj-links a,.fj-links button{color:var(--acc)}
+.fj-links{display:flex;flex-direction:column;gap:10px;align-items:center;font-size:15px}
+.fj-links button{background:none;border:0;font:inherit;cursor:pointer;padding:4px}
+.fj-note{background:var(--surface);border-radius:var(--r-card);padding:12px 14px;font-size:13px;line-height:1.4;color:var(--label-2);text-align:start}
+.fj-note.warn{border-inline-start:3px solid var(--orange)}
+@media (max-width:360px){.fj-roles{grid-template-columns:1fr}}

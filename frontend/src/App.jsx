@@ -41,6 +41,9 @@ import Admin from './views/Admin.jsx'
 import CoachChat from './views/CoachChat.jsx'
 import CoachIntake from './views/CoachIntake.jsx'
 import CoachSetup from './views/CoachSetup.jsx'
+import ForjaAuth from './views/forja/Auth.jsx'
+import { useForjaSession } from './lib/forja-session.js'
+import { FORJA_AUTH_UI } from './lib/forja-config.js'
 
 // last known scrollY per route, so back-navigation can put the page where it was
 const scrollPositions = new Map()
@@ -158,7 +161,9 @@ function Shell() {
   // bound to the workout, not to the route — checking Stats mid-session keeps the screen on
   useWakeLock(!!S.active && !S.active.editingWorkoutId && S.keepAwake !== false)
 
-  const authed = user || isGuest
+  // Forja: con cuentas de correo activas, entrar exige una sesión de Forja además del perfil local.
+  const forjaSession = useForjaSession()
+  const authed = (user || isGuest) && (!FORJA_AUTH_UI || !!forjaSession)
   if (!ready && !authed) return (
     <div id="app">
       <div style={{ paddingTop: '44vh', display: 'flex', justifyContent: 'center', fontSize: 34, color: 'var(--label-3)' }}>
@@ -173,7 +178,7 @@ function Shell() {
           re-mounts the boundary, so the tab bar is always a way out */}
       <div id="app" className="vfade" key={loc.pathname}>
         <ErrorBoundary>
-          {!authed ? <Login /> : needsMobileOnboarding ? <MobileOnboarding /> : (
+          {!authed ? (FORJA_AUTH_UI ? <ForjaAuth /> : <Login />) : needsMobileOnboarding ? <MobileOnboarding /> : (
             <Routes>
               <Route path="/home" element={<Home />} />
               {/* Gym check-in — switched off in Settings, the route falls through to the
@@ -206,7 +211,7 @@ function Shell() {
           including on the sign-in screen, when the server has just ended the session. */}
       <SyncBanner />
       {/* The chat owns the bottom of the screen: its composer sits where the tabs would be. */}
-      {loc.pathname !== '/coach' && <TabBar onStart={startFlow} />}
+      {loc.pathname !== '/coach' && !(FORJA_AUTH_UI && !authed) && <TabBar onStart={startFlow} />}
       <RestTimer />
       <Modals />
       <Toast />
