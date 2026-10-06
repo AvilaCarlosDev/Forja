@@ -20,6 +20,19 @@ Alcance: dejar el fork identificado como Forja, con créditos correctos a openGy
 
 Fuera de alcance de la fase 1: cualquier cambio de backend, Supabase o Vercel.
 
-## Fase 2 — Vercel + Supabase
+## Fase 2 — Cuentas (Vercel + Supabase)
 
-Pendiente de plan.
+Alcance de 2a: registro e inicio de sesión con correo sobre Supabase Auth, con elección de perfil (Personal Trainer o Cliente) y sexo. Los datos de entrenamiento siguen en el dispositivo; su sincronización con Supabase es 2b.
+
+| # | Tarea | Estado | Evidencia |
+|---|---|---|---|
+| 1 | Librería de auth por REST, sin SDK (`frontend/src/lib/forja-auth.js`) | Hecho | `forja-auth.test.js`, 24 tests |
+| 2 | Pantallas: entrar, crear cuenta, recuperar contraseña, enlace del correo | Hecho | recorrido en navegador sin errores de consola (modo vista previa) |
+| 3 | Cuenta y cerrar sesión en Ajustes; saludo con el nombre | Hecho | mismo recorrido |
+| 4 | Tabla `profiles`, trigger de alta y RLS (`supabase/migrations/0001_forja_profiles.sql`) | Escrito, **sin ejecutar** | pendiente de correrlo en Supabase |
+| 5 | Probar contra Supabase real (registro, confirmación por correo, login, recuperación) | Pendiente | necesita `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` |
+| 6 | Limpiar la app anterior en el proyecto Gymcoach (`0000_revisar_y_limpiar.sql`) | Pendiente, lo ejecuta Carlos | borra datos: revisar antes |
+| 7 | Despliegue del frontend en Vercel con las variables de entorno | Pendiente | — |
+| 8 | 2b: guardar el estado de entrenamiento en Supabase | Pendiente de plan | — |
+
+Pendiente de diseño (pedido el 2026-10-06): elegir entrenador al registrarse y cambiarlo después, gimnasio de cada perfil con lista de Punto Fijo, y métricas corporales que acompañan al cliente al cambiar de entrenador.
