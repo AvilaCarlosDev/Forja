@@ -1,6 +1,6 @@
 {
-  "name": "openGym",
-  "short_name": "openGym",
+  "name": "Forja",
+  "short_name": "Forja",
   "description": "Personal gym & body weight tracker",
   "start_url": "./",
   "scope": "./",
