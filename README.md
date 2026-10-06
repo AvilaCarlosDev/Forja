@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/brand/forja-lockup.png" alt="Forja" width="480">
+<img src="assets/brand/forja-lockup.png" alt="Forja" width="640">
 
 </div>
 
