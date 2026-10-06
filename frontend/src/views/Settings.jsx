@@ -30,6 +30,7 @@ import { ServerSyncSection, KeptChangesRows, leaveServer, connectServer, passkey
 import { passwordOn, PasswordRow, openPasswordSignIn, openPasswordRegister } from '../components/PasswordAuth.jsx'
 import { usePasskeys, PasskeysRow, DeviceLinkRow } from '../components/Passkeys.jsx'
 import { Section, Row, SelectRow, Switch, Segmented, Button, TextField } from '../components/ui.jsx'
+import ForjaAccount from './forja/Account.jsx'
 
 export default function Settings() {
   const nav = useNavigate()
@@ -274,6 +275,8 @@ export default function Settings() {
       <button className="iconbtn" onClick={() => nav('/home')} aria-label={t('Home')}><Icon name="chevronLeft" /></button>
       <div style={{ flex: 1, marginInlineStart: 10 }}><h1>{t('Settings')}</h1></div>
     </div>
+
+    <ForjaAccount />
 
     {/* ---------- the server: which one, which account, how that stands, "Sync now" ----------
         A paired phone's Admin and Disconnect sit in the same block; a browser's account rows
