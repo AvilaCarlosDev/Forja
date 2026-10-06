@@ -30,9 +30,9 @@ Alcance de 2a: registro e inicio de sesión con correo sobre Supabase Auth, con 
 | 2 | Pantallas: entrar, crear cuenta, recuperar contraseña, enlace del correo | Hecho | recorrido en navegador sin errores de consola (modo vista previa) |
 | 3 | Cuenta y cerrar sesión en Ajustes; saludo con el nombre | Hecho | mismo recorrido |
 | 4 | Tabla `profiles`, trigger de alta y RLS (`supabase/migrations/0001_forja_profiles.sql`) | Escrito, **sin ejecutar** | pendiente de correrlo en Supabase |
-| 5 | Probar contra Supabase real (registro, confirmación por correo, login, recuperación) | Pendiente | necesita `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` |
-| 6 | Limpiar la app anterior en el proyecto Gymcoach (`0000_revisar_y_limpiar.sql`) | Pendiente, lo ejecuta Carlos | borra datos: revisar antes |
-| 7 | Despliegue del frontend en Vercel con las variables de entorno | Pendiente | — |
+| 5 | Probar contra Supabase real (registro, confirmación por correo, login, recuperación) | Pendiente, lo hace Carlos | variables ya cargadas; falta Site URL en Supabase |
+| 6 | Archivar la app anterior en `legacy_gymcoach` (`0000b_archivar_app_anterior.sql`, reversible) | Cargado en el editor SQL, **sin ejecutar** | 2026-10-06: tablas viejas siguen en `public`, `profiles` da 404 |
+| 7 | Despliegue del frontend en Vercel con las variables de entorno | Hecho | https://gym-coach-client.vercel.app responde 200 con la marca Forja |
 | 8 | 2b: guardar el estado de entrenamiento en Supabase | Pendiente de plan | — |
 
 Pendiente de diseño (pedido el 2026-10-06): elegir entrenador al registrarse y cambiarlo después, gimnasio de cada perfil con lista de Punto Fijo, y métricas corporales que acompañan al cliente al cambiar de entrenador.
