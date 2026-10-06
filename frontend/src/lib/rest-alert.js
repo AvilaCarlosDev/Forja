@@ -22,7 +22,7 @@ export const REST_QUIET_CHANNEL_ID = 'rest-over-quiet'
 // One object the native side schedules. Public + high is what the notification shade can show.
 // The lock screen follows the user's notification settings.
 export function accentColors(key) {
-  const k = ACCENTS[key] ? key : 'lime'
+  const k = ACCENTS[key] ? key : 'orange'
   return { accent: argb(ACCENTS[k]), ink: argb(ACCENT_INK[k]) }
 }
 
