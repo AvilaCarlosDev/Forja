@@ -3,6 +3,13 @@
 openGym — Copyright (C) 2026 Duarte Santos.
 openGym's own code is licensed under the **GNU AGPL v3.0** (see [LICENSE](LICENSE)).
 
+## Forja
+
+Forja is a modified version of [openGym](https://github.com/DuarteSantos8/openGym), first modified
+on 2026-10-06. Modifications are Copyright (C) 2026 Carlos Ávila and are licensed under the same
+GNU AGPL v3.0. "openGym" is the name of the upstream project; Forja is not affiliated with or
+endorsed by it. Everything below is the upstream notice, unchanged.
+
 ## App store exception
 
 As an additional permission under section 7 of the AGPL v3.0, the copyright holder permits
