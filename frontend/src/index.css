@@ -19,8 +19,8 @@
 /* ---------------------------------------------------------------- tokens -- */
 :root {
   /* surfaces — dark is the default */
-  /* Forja: fondos con el tinte carbón del logo (#0f1316) en vez del negro puro de openGym */
-  --bg:        #0f1316;
+  /* Forja: fondos con el tinte carbón del logo (#0f1417) en vez del negro puro de openGym */
+  --bg:        #0f1417;
   --bg-el:     #151a1e;   /* elevated backdrop (sheets, bars) */
   --surface:   #1b2126;   /* card / grouped-list fill */
   --surface-2: #262d33;   /* pressed + nested fill */
