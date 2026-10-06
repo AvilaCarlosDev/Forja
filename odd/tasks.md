@@ -14,7 +14,7 @@ Alcance: dejar el fork identificado como Forja, con créditos correctos a openGy
 | 4 | Crédito de Forja en `NOTICE.md` | Hecho | commit `docs: NOTICE` |
 | 5 | Corregir descripción y enlace del repo en GitHub | Hecho | "About" del repo corregido, enlace a la web de openGym quitado |
 | 6 | Workflows heredados (`mirror.yml`, `pages.yml`, `docker-publish.yml`) solo manuales | Hecho | commit `ci:`; YAML validado |
-| 7 | Icono y logo propios (hoy se usa el de openGym) | Pendiente: esperando el logo | — |
+| 7 | Icono y logo propios (hoy se usa el de openGym) | Hecho | iconos 180/192/512, favicon 16/32/48, banner en `assets/brand/`; build y tests |
 | 8 | Marca Forja en los textos de la app | Hecho | `frontend/src/lib/brand.js` + `brand.test.js`; 3165/3166 tests |
 | 9 | `CoachChat.demo-failure.test.jsx` falla también sin cambios de Forja (heredado, intermitente) | Pendiente de diagnóstico | pasó en la primera corrida, falla en las siguientes |
 
