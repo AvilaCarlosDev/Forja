@@ -2,7 +2,7 @@
   "appId": "ch.duartesantos.opengym",
   "appName": "Forja",
   "webDir": "dist",
-  "backgroundColor": "#0f1417",
+  "backgroundColor": "#111619",
   "android": {
     "allowMixedContent": false
   }
