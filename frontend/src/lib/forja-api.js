@@ -57,6 +57,9 @@ export const remoteApi = {
   deleteMetric: id => db.del('body_metrics', 'id=eq.' + id),
   goal: clientId => db.one('client_goals', { client_id: clientId }),
   setGoal: (clientId, g) => db.insert('client_goals', { client_id: clientId, ...g }, { upsert: true }),
+  diet: clientId => db.one('diet_plans', { client_id: clientId }),
+  setDiet: (clientId, { targets, meals, notes }) => db.rpc('forja_set_diet', { p_client: clientId, p_targets: targets, p_meals: meals, p_notes: notes || null }),
+  deleteDiet: clientId => db.rpc('forja_delete_diet', { p_client: clientId }),
   gymsByIds: ids => !ids.length ? Promise.resolve([]) : db.select('gyms', 'select=id,name,branch&id=in.' + inList(ids)),
 }
 // ---------------------------------------------------------------------------------------------
@@ -96,8 +99,8 @@ function person(d, id) {
   return d.people.find(p => p.id === id) || null
 }
 const fail = m => { throw new Error(m) }
-// Igual que forja_require_pro() en 0008: las finanzas solo se escriben con el plan Pro vigente.
-const requirePro = () => { if (effectivePlan(getProfile().row || {}) !== 'pro') fail('Finanzas es una función Pro. Pásate a Pro para usarla.') }
+// Igual que forja_require_pro() en 0008: finanzas y dietas solo se escriben con el plan Pro vigente.
+const requirePro = () => { if (effectivePlan(getProfile().row || {}) !== 'pro') fail('Es una función Pro. Pásate a Pro para usarla.') }
 const notify = (d, user_id, kind, link_id, actor) => d.notifications.unshift({ id: uid(), user_id, kind, link_id, actor_id: actor, actor_name: person(d, actor)?.name, created_at: now(), read_at: null })
 const activeTrainer = (d, clientId) => d.links.find(l => l.client_id === clientId && l.status === 'active')?.trainer_id || null
 
@@ -192,6 +195,22 @@ export const previewApi = {
     d.goals[clientId] = { client_id: clientId, ...g, updated_by: me(), updated_at: now() }; save(d); return ok(d.goals[clientId])
   },
   gymsByIds: ids => ok(load().gyms.filter(g => ids.includes(g.id))),
+  diet: clientId => ok(load().diets?.[clientId] || null),
+  setDiet(clientId, { targets, meals, notes }) {
+    requirePro()
+    const d = load()
+    if (activeTrainer(d, clientId) !== me()) fail('Ese cliente no está vinculado a ti')
+    d.diets ||= {}
+    d.diets[clientId] = { client_id: clientId, trainer_id: me(), targets, meals, notes: String(notes || '').trim() || null, updated_at: now() }
+    save(d); return ok(d.diets[clientId])
+  },
+  deleteDiet(clientId) {
+    requirePro()
+    const d = load()
+    if (activeTrainer(d, clientId) !== me()) fail('Ese cliente no está vinculado a ti')
+    if (d.diets) delete d.diets[clientId]
+    save(d); return ok(null)
+  },
   setLinkFee(linkId, fee) {
     requirePro()
     const d = load(), l = d.links.find(x => x.id === linkId)

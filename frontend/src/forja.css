@@ -158,3 +158,19 @@
 .fj-status.vencido{background:rgba(255,84,84,.16);color:var(--red)}
 .fj-list>li{display:flex;flex-direction:column;gap:6px}
 .fj-pay-row{margin:0 2px 4px}
+/* Dieta (función Pro): comidas con sus alimentos y totales contra el objetivo del día */
+.fj-meter{height:6px;border-radius:3px;background:var(--sep-op);overflow:hidden;margin-top:4px}
+.fj-meter i{display:block;height:100%;background:var(--acc);border-radius:3px}
+.fj-meter.over i{background:var(--red)}
+.fj-meals,.fj-foods,.fj-food-results{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.fj-meal{padding:10px 0;border-top:1px solid var(--sep-op);display:flex;flex-direction:column;gap:4px}
+.fj-meal:first-child{border-top:0}
+.fj-meal-head{display:flex;align-items:baseline;gap:8px}
+.fj-meal-head b{font-size:16px}
+.fj-meal-kcal{margin-inline-start:auto}
+.fj-foods li{display:flex;flex-direction:column;gap:1px;padding:5px 0;font-size:15px}
+.fj-foods li .fj-link{min-height:0;padding:2px 0;font-size:13px}
+.fj-meal-edit{background:var(--surface)}
+.fj-meal-fields{display:grid;grid-template-columns:1fr 112px auto;gap:8px;align-items:center}
+.fj-adder{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:12px;background:var(--bg)}
+.fj-food-results{gap:6px}

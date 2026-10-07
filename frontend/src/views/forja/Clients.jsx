@@ -11,6 +11,7 @@ import { ageOn } from '../../lib/forja-profile.js'
 import { useUI } from '../../store/useUI.js'
 import { Avatar } from './Avatar.jsx'
 import Metrics from './Metrics.jsx'
+import Diet from './Diet.jsx'
 import { Loading, ErrorNote, useLoad } from './parts.jsx'
 import { refreshBadge } from './badge.js'
 import '../../forja.css'
@@ -126,5 +127,6 @@ export function ClientDetail() {
       </div>
     </div>
     <Metrics clientId={c.id} canEdit pro={effectivePlan(row) === 'pro'} />
+    <Diet clientId={c.id} clientName={c.name} canEdit pro={effectivePlan(row) === 'pro'} />
   </div>
 }

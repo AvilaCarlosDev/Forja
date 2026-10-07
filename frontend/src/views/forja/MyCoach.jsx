@@ -11,6 +11,7 @@ import { Avatar } from './Avatar.jsx'
 import GymPicker from './GymPicker.jsx'
 import TrainerPicker from './TrainerPicker.jsx'
 import Metrics from './Metrics.jsx'
+import Diet from './Diet.jsx'
 import { Panel, Loading, ErrorNote, useLoad } from './parts.jsx'
 import { refreshBadge } from './badge.js'
 import '../../forja.css'
@@ -113,6 +114,11 @@ export default function MyCoach() {
         {status !== 'al_dia' && <p className="dim small">Cuando pagues, tu entrenador lo registra aquí y queda al día.</p>}
       </section>
     })()}
+
+    {active && <>
+      <h2 className="fj-subtitle">Mi dieta</h2>
+      <Diet clientId={row.id} canEdit={false} pro={trainerPro} lockedText="La dieta es parte del plan Pro de tu entrenador." />
+    </>}
 
     <h2 className="fj-subtitle">Mis medidas y avances</h2>
     <Metrics clientId={row.id} canEdit={clientCanEditMetrics(active)} pro={trainerPro}

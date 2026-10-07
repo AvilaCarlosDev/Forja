@@ -83,3 +83,16 @@ Alcance: la app ya escondía Finanzas a los entrenadores Free, pero las funcione
 | 2 | La vista previa aplica la misma regla (`requirePro` en `forja-api.js`) | Hecho | `Finanzas.test.jsx`: plan Free rechaza las tres escrituras |
 | 3 | Suite completa | Hecho | 3269/3278 con Node 22; los 9 rojos (SyncBanner, media-prefetch, default-lang, CoachChat) los causa `frontend/.env.local` y también fallan en HEAD con ese archivo; sin él pasan |
 | 4 | Ejecutar 0008 y su prueba en Supabase real | Pendiente | — |
+
+## 0009 — Dieta del cliente (función Pro) (2026-10-07)
+
+Alcance: el entrenador Pro arma la dieta de su cliente (comidas del día con alimentos y porciones, objetivos diarios y totales calculados por alimento). El cliente la ve en solo lectura. Con Free no se muestra ni se edita, pero no se borra. Regla de `docs/PLAN.md`: dietas, finanzas y comparativa son Pro.
+
+| # | Tarea | Estado | Evidencia |
+|---|---|---|---|
+| 1 | `lib/forja-diet.js`: 41 alimentos comunes en Venezuela (valores aproximados por 100 g), porciones caseras, totales por comida y por día contra el objetivo, alimento propio | Hecho | `forja-diet.test.js` 9/9 (incluye coherencia kcal ≈ 4/4/9 de cada alimento) |
+| 2 | `0009_forja_dietas.sql`: tabla `diet_plans` (una por cliente), lectura por RLS, escritura solo por `forja_set_diet` / `forja_delete_diet` (Pro vigente + entrenador activo) y validación de forma y límites | Hecho | `0009_forja_dietas.test.sql` **11/11** en PGlite; la prueba 4 encontró un hueco (alimento sin gramos pasaba por NULL) y quedó corregido |
+| 3 | Pantalla `views/forja/Diet.jsx`: vista con barras contra el objetivo y editor (buscar alimento, gramos, alimento propio, comidas, indicaciones) en la ficha del cliente y en Mi coach | Hecho | `Diet.test.jsx` 5/5; recorrido en el navegador con las dos sesiones demo |
+| 4 | Sesiones demo con dietas (María, José y Lucía) | Hecho | `scripts/forja-demo-sessions.mjs` |
+| 5 | Suite y build | Hecho | 3283/3292 (los 9 rojos de `.env.local`, ver 0008); build ok |
+| 6 | Ejecutar 0008 y 0009 con sus pruebas en Supabase real | Pendiente | — |

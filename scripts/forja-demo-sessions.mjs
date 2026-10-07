@@ -1,6 +1,6 @@
 // Forja: genera las dos sesiones demo (frontend/public/sesion-trainer.js y sesion-cliente.js)
 // con datos completos para ver la app llena: rutinas, 12 semanas de entrenamientos y pesajes,
-// medidas que avanzan, meta, mensualidades y pagos. Todo vive en el localStorage del navegador
+// medidas que avanzan, meta, dieta, mensualidades y pagos. Todo vive en el localStorage del navegador
 // (modo vista previa); nada toca Supabase.
 //
 // Las fechas salen relativas al día en que se corre (el estado de pago depende del mes en curso),
@@ -10,6 +10,7 @@ import { writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildDemoState } from '../frontend/src/lib/demoSeed.js'
+import { foodById, itemFromFood } from '../frontend/src/lib/forja-diet.js'
 
 const out = join(dirname(fileURLToPath(import.meta.url)), '..', 'frontend', 'public')
 const TODAY = new Date(); TODAY.setHours(12, 0, 0, 0)
@@ -73,6 +74,19 @@ function payments(clientId, trainerId, amount, firstAgo, lastAgo, methods) {
   }
   return rows
 }
+
+// Una dieta: [[comida, hora, [[alimento, gramos], …]], …]; la arma `trainer`.
+function diet(clientId, trainer, targets, meals, notes, ago = 20) {
+  return { client_id: clientId, trainer_id: trainer, targets, notes, updated_at: stamp(daysAgo(ago)),
+    meals: meals.map(([name, time, items]) => ({ name, time, items: items.map(([f, g]) => itemFromFood(foodById(f), g)) })) }
+}
+const CUT_F = [   // déficit para ella, ~1.700 kcal
+  ['Desayuno', '07:00', [['huevo', 100], ['arepa', 90], ['queso-blanco', 30], ['cafe', 240]]],
+  ['Merienda', '10:00', [['yogur-griego', 170], ['fresas', 150]]],
+  ['Almuerzo', '13:00', [['pollo', 130], ['arroz', 120], ['caraotas', 85], ['ensalada', 150], ['aceite-oliva', 7]]],
+  ['Merienda', '16:30', [['manzana', 180], ['almendras', 18]]],
+  ['Cena', '19:30', [['pescado', 150], ['batata', 150], ['brocoli', 155]]],
+]
 
 // El historial de entrenamiento (rutinas, sesiones y pesajes) sale del perfil de ejemplo de la
 // app; aquí se pasa a español y se ajusta a cada persona.
@@ -151,13 +165,25 @@ function file(title, store) {
     ...payments('c-demo-2', me, 35, 1, 1, ['Efectivo USD']),
     ...payments('c-demo-3', me, 25, 2, 2, ['Binance']),
   ]
+  const diets = {
+    'c-demo-1': diet('c-demo-1', me, { kcal: 1700, protein: 135, carbs: 185, fat: 45 }, CUT_F,
+      '2 L de agua al día. Café sin azúcar. Una comida libre el domingo.'),
+    'c-demo-2': diet('c-demo-2', me, { kcal: 3300, protein: 200, carbs: 420, fat: 90 }, [
+      ['Desayuno', '06:30', [['avena', 60], ['leche-entera', 240], ['cambur', 120], ['mani', 16]]],
+      ['Merienda', '10:00', [['arepa', 90], ['huevo', 100], ['queso-blanco', 30]]],
+      ['Almuerzo', '13:00', [['carne-molida', 150], ['arroz', 240], ['caraotas', 170], ['platano', 100]]],
+      ['Pre-entreno', '16:30', [['pan-integral', 60], ['mani', 16], ['cambur', 120]]],
+      ['Post-entreno', '19:00', [['whey', 30], ['leche-desc', 240]]],
+      ['Cena', '20:30', [['pollo', 180], ['pasta', 210], ['vegetales', 150], ['aceite-oliva', 7]]],
+    ], 'Superávit moderado. Si el peso no sube en 2 semanas, agregar ½ taza de arroz al almuerzo.', 12),
+  }
   const notifications = [
     { id: id('n'), user_id: me, kind: 'link_request', link_id: links[3].id, actor_id: 'c-demo-4', actor_name: 'Pedro Demo', created_at: stamp(daysAgo(1)), read_at: null },
   ]
   const profile = { id: me, name: 'Coach Demo', sex: 'male', role: 'trainer', plan: 'pro', birth_date: '1990-05-10', remote: false, onboarded_at: stamp(daysAgo(90)) }
   writeFileSync(join(out, 'sesion-trainer.js'), file('Coach Demo (entrenador Pro)', {
     forja_preview_db_v1: { gyms: GYMS, people: [...TRAINERS, ...clients], trainerGyms: { ...trainerGyms, [me]: ['g-gs-sambil', 'g-gs-virtudes'] },
-      links, notifications, metrics, goals, payments: pays, seededFor: me },
+      links, notifications, metrics, goals, payments: pays, diets, seededFor: me },
     gym_guest: 1,
     forja_session_v1: { access_token: 'preview', refresh_token: '', expires_at: 0, preview: true,
       profile: { id: me, email: 'coach@demo.forja', name: 'Coach Demo', sex: 'male', role: 'trainer' } },
@@ -177,13 +203,15 @@ function file(title, store) {
     girthsFrom: { waist: 79, hip: 102, arm: 29, thigh: 58, calf: 36 }, girthsTo: { waist: 72.5, hip: 97.5, arm: 28.5, thigh: 55, calf: 35.5 },
     notes: { 0: 'Evaluación inicial con bioimpedancia.', 4: 'Va excelente: -3 kg y la cintura bajando.' } })
   const goals = { [me]: { client_id: me, goal: 'Llegar a 62 kg y marcar abdomen', target_weight_kg: 62, target_date: iso(daysAgo(-60)), updated_by: coach, updated_at: stamp(daysAgo(85)) } }
+  const diets = { [me]: diet(me, coach, { kcal: 1700, protein: 135, carbs: 185, fat: 45 }, CUT_F,
+    'Toma 2 L de agua al día. Si entrenas de noche, pasa la merienda de la tarde a después del entreno.', 15) }
   const notifications = [
     { id: id('n'), user_id: me, kind: 'link_accepted', link_id: l.id, actor_id: coach, actor_name: 'Andrea Rojas (demo)', created_at: stamp(daysAgo(85)), read_at: stamp(daysAgo(85)) },
   ]
   const profile = { id: me, name: 'Lucía Demo', sex: 'female', role: 'client', plan: 'free', birth_date: '1996-03-14', gym_id: 'g-gs-sambil', remote: false, onboarded_at: stamp(daysAgo(86)) }
   writeFileSync(join(out, 'sesion-cliente.js'), file('Lucía Demo (clienta)', {
     forja_preview_db_v1: { gyms: GYMS, people: trainers, trainerGyms, links: [l], notifications, metrics, goals,
-      payments: payments(me, coach, 30, 2, 0, ['Pago móvil Provincial', 'Pago móvil Provincial', 'Zelle']) },
+      payments: payments(me, coach, 30, 2, 0, ['Pago móvil Provincial', 'Pago móvil Provincial', 'Zelle']), diets },
     gym_guest: 1,
     forja_session_v1: { access_token: 'preview', refresh_token: '', expires_at: 0, preview: true,
       profile: { id: me, email: 'lucia@demo.forja', name: 'Lucía Demo', sex: 'female', role: 'client' } },

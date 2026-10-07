@@ -11,7 +11,7 @@ create or replace function public.forja_require_pro()
 returns void language plpgsql stable security definer set search_path = public as $$
 begin
   if coalesce((select public.forja_effective_plan(p) from public.profiles p where p.id = auth.uid()), 'free') <> 'pro' then
-    raise exception 'Finanzas es una función Pro. Pásate a Pro para usarla.' using errcode = '42501';
+    raise exception 'Es una función Pro. Pásate a Pro para usarla.' using errcode = '42501';
   end if;
 end;
 $$;
