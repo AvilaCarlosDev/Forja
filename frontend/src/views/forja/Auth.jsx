@@ -220,7 +220,7 @@ function NewPassword({ done }) {
   </div>
 }
 
-export default function ForjaAuth() {
+function Screens() {
   const [mode, setMode] = useState('login')
   const [sent, setSent] = useState(null)
   const [linkErr, setLinkErr] = useState('')
@@ -247,5 +247,50 @@ export default function ForjaAuth() {
   return <>
     {linkErr && <div className="narrow"><div className="fj-note warn" role="alert" style={{ marginTop: 16 }}>{linkErr}</div></div>}
     <Login go={go} />
+  </>
+}
+
+// Fondo de entrar y crear cuenta: un bucle de 8 s de alguien entrenando (Mixkit, licencia libre
+// comercial; ver docs/design/login-video.md). Primero se ve la imagen fija; el video se pide
+// después de pintar el formulario, y no se pide si la persona prefiere menos movimiento o tiene
+// activado el ahorro de datos. Se pausa con la pestaña oculta.
+const BG = { poster: 'forja/login-poster.jpg', webm: 'forja/login.webm', mp4: 'forja/login.mp4' }
+export function wantsVideo(w = globalThis) {
+  if (w.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return false
+  if (w.navigator?.connection?.saveData) return false
+  return true
+}
+
+function AuthBackdrop() {
+  const video = useRef(null)
+  const [play, setPlay] = useState(false)
+  useEffect(() => {
+    if (!wantsVideo()) return
+    const idle = globalThis.requestIdleCallback || (fn => setTimeout(fn, 300))
+    const id = idle(() => setPlay(true))
+    return () => (globalThis.cancelIdleCallback || clearTimeout)(id)
+  }, [])
+  useEffect(() => {
+    const v = video.current
+    if (!play || !v) return
+    const vis = () => { if (document.hidden) v.pause(); else v.play().catch(() => {}) }
+    document.addEventListener('visibilitychange', vis)
+    v.play().catch(() => {})
+    return () => document.removeEventListener('visibilitychange', vis)
+  }, [play])
+  return <div className="fj-backdrop" aria-hidden="true">
+    {play
+      ? <video ref={video} muted loop playsInline autoPlay preload="auto" poster={BG.poster} disablePictureInPicture>
+        <source src={BG.webm} type="video/webm" />
+        <source src={BG.mp4} type="video/mp4" />
+      </video>
+      : <img src={BG.poster} alt="" />}
+  </div>
+}
+
+export default function ForjaAuth() {
+  return <>
+    <AuthBackdrop />
+    <div className="fj-auth-layer"><Screens /></div>
   </>
 }

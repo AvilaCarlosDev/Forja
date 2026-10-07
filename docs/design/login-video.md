@@ -73,3 +73,12 @@ Ninguno se ejecuta hasta que Carlos: (a) audite saldo real en buzzy.now, (b) apr
 
 1. Elegir 2-3 clips stock (Mixkit/Pexels), recortarlos y probar overlay + poster en el login — sin tocar BUZZY.
 2. Guardar el poster ya recortado en `frontend/public/` cuando Carlos apruebe la selección.
+
+## Decisión final (2026-10-06): video de stock
+
+El clip generado en Buzzy falló (`TASK_STATE_FAILED`, sin archivo). Se usa stock gratis:
+
+- Clip: [Mixkit 52094 — "A shirtless young man does repetitions lifting the heavy barbell"](https://mixkit.co/free-stock-video/a-shirtless-young-man-does-repetitions-lifting-the-heavy-barbell-52094/). Licencia Mixkit Stock Video Free: uso comercial, sin atribución obligatoria ([info oficial](https://mixkit.co/llm-info/)).
+- Bucle de 8 s sin corte: segundos 1–9 con fundido de 1 s del final al principio (`xfade`).
+- Archivos en `frontend/public/forja/`: `login.webm` (VP9, 342 KB), `login.mp4` (H.264, 483 KB), `login-poster.jpg` (43 KB).
+- `views/forja/Auth.jsx` (`AuthBackdrop`): imagen fija primero, video tras la primera pintura, nada de video con `prefers-reduced-motion` o ahorro de datos, pausa con la pestaña oculta. Capa oscura y formulario con fondo translúcido; siempre en oscuro aunque la app esté en modo claro.
