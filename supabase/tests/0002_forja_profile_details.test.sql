@@ -1,5 +1,5 @@
 -- Forja · prueba de 0002 · completar el perfil
--- Ejecutar en Supabase → SQL Editor DESPUÉS de 0002_forja_profile_details.sql.
+-- Ejecutar en Supabase → SQL Editor DESPUÉS de 0002 y 0003 (usa la columna remote de 0003).
 --
 -- Crea dos usuarios de prueba, actúa como cada uno y comprueba los permisos. Al final lanza
 -- un error A PROPÓSITO con el resumen: así Postgres deshace todo y no queda ningún dato de prueba.
@@ -37,6 +37,8 @@ begin
   -- 4. Adulto con fecha válida: termina el perfil.
   begin
     update public.profiles set birth_date = date '1995-05-20' where id = a;
+    -- Desde 0003 también hace falta el gimnasio; aquí, a distancia.
+    update public.profiles set remote = true where id = a;
     p := public.forja_finish_onboarding();
     if p.onboarded_at is not null then ok := ok + 1; else fallos := fallos || ' [4 sin onboarded_at]'; end if;
   exception when others then fallos := fallos || ' [4 ' || sqlerrm || ']'; end;
@@ -72,7 +74,7 @@ begin
 
   -- 10. 16 años: la fecha se acepta, pero sin consentimiento no termina.
   begin
-    update public.profiles set birth_date = current_date - interval '16 years' where id = m;
+    update public.profiles set birth_date = current_date - interval '16 years', remote = true where id = m;
     begin perform public.forja_finish_onboarding(); fallos := fallos || ' [10 menor terminó sin consentimiento]';
     exception when others then ok := ok + 1; end;
   exception when others then fallos := fallos || ' [10 rechazó 16 años: ' || sqlerrm || ']'; end;
