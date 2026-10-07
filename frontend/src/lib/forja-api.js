@@ -96,6 +96,8 @@ function person(d, id) {
   return d.people.find(p => p.id === id) || null
 }
 const fail = m => { throw new Error(m) }
+// Igual que forja_require_pro() en 0008: las finanzas solo se escriben con el plan Pro vigente.
+const requirePro = () => { if (effectivePlan(getProfile().row || {}) !== 'pro') fail('Finanzas es una función Pro. Pásate a Pro para usarla.') }
 const notify = (d, user_id, kind, link_id, actor) => d.notifications.unshift({ id: uid(), user_id, kind, link_id, actor_id: actor, actor_name: person(d, actor)?.name, created_at: now(), read_at: null })
 const activeTrainer = (d, clientId) => d.links.find(l => l.client_id === clientId && l.status === 'active')?.trainer_id || null
 
@@ -191,12 +193,14 @@ export const previewApi = {
   },
   gymsByIds: ids => ok(load().gyms.filter(g => ids.includes(g.id))),
   setLinkFee(linkId, fee) {
+    requirePro()
     const d = load(), l = d.links.find(x => x.id === linkId)
     if (!l || l.trainer_id !== me() || l.status !== 'active') fail('Ese vínculo no es tuyo')
     if (fee != null && !(Number(fee) >= 0)) fail('La mensualidad no puede ser negativa')
     l.monthly_fee = fee == null ? null : Number(fee); save(d); return ok(null)
   },
   registerPayment({ client, amount, period, paid_at, note }) {
+    requirePro()
     const d = load(), l = d.links.find(x => x.client_id === client && x.trainer_id === me() && x.status === 'active')
     if (!l) fail('Ese cliente no está vinculado a ti')
     if (!(Number(amount) >= 0)) fail('El monto no puede ser negativo')
@@ -209,6 +213,7 @@ export const previewApi = {
     d.payments.push(p); save(d); return ok(p)
   },
   deletePayment(id) {
+    requirePro()
     const d = load(), p = d.payments.find(x => x.id === id)
     if (!p || p.trainer_id !== me()) fail('Ese pago no es tuyo')
     d.payments = d.payments.filter(x => x.id !== id); save(d); return ok(null)

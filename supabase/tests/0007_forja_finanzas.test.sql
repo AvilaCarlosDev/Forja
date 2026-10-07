@@ -18,6 +18,9 @@ begin
     (x, 'x+' || x || '@prueba.forja', '{"name":"Xavi Trainer","sex":"male","role":"trainer"}', '{"provider":"email"}'),
     (y, 'y+' || y || '@prueba.forja', '{"name":"Yola Cliente","sex":"female","role":"client"}', '{"provider":"email"}');
 
+  -- Finanzas es Pro (0008): los dos entrenadores tienen el plan vigente.
+  update public.profiles set plan = 'pro' where id in (t, x);
+
   insert into public.coach_links (client_id, trainer_id, status) values (c, t, 'active') returning * into l;
   insert into public.coach_links (client_id, trainer_id, status) values (y, x, 'active');
 

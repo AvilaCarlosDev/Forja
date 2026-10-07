@@ -72,3 +72,14 @@ Alcance: el cliente elige su gimnasio de Punto Fijo (o "Otro", o en casa) y, si 
 ## Publicación (2026-10-06)
 
 `forja/3.1-perfil` fusionada por avance rápido en `forja/fase-1` y desplegada en https://forja-trainer.vercel.app: el bundle publicado contiene el asistente, Mi coach y los gimnasios; `forja/login.webm` responde 200 (825 KB); la pantalla de entrada carga sin errores de consola.
+
+## 0008 — Finanzas solo para el plan Pro (2026-10-07)
+
+Alcance: la app ya escondía Finanzas a los entrenadores Free, pero las funciones de 0007 no lo verificaban. Ahora la base lo exige y se quita EXECUTE de PUBLIC.
+
+| # | Tarea | Estado | Evidencia |
+|---|---|---|---|
+| 1 | `0008_forja_finanzas_pro.sql`: `forja_require_pro()` en mensualidad, registrar y borrar pago; leer el historial sigue abierto | Hecho | `0008_forja_finanzas_pro.test.sql` **8/8** en PGlite; 0002 13/13, 0005 24/24, 0006 8/8, 0007 12/12 (su prueba ahora usa entrenadores Pro) |
+| 2 | La vista previa aplica la misma regla (`requirePro` en `forja-api.js`) | Hecho | `Finanzas.test.jsx`: plan Free rechaza las tres escrituras |
+| 3 | Suite completa | Hecho | 3269/3278 con Node 22; los 9 rojos (SyncBanner, media-prefetch, default-lang, CoachChat) los causa `frontend/.env.local` y también fallan en HEAD con ese archivo; sin él pasan |
+| 4 | Ejecutar 0008 y su prueba en Supabase real | Pendiente | — |

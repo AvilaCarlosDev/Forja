@@ -134,4 +134,14 @@ describe('Forja — finanzas (plan Free)', () => {
     expect(host.textContent).not.toMatch('María Demo')
     expect(host.textContent).not.toMatch('Registrar pago')
   })
+
+  it('the preview api refuses finance writes, like the database (0008)', async () => {
+    await act(async () => {
+      await expect(api().setLinkFee('l-fin', 40)).rejects.toThrow('Pro')
+      await expect(api().registerPayment({ client: 'c-demo-1', amount: 10, period: '2026-10', paid_at: '2026-10-07' }))
+        .rejects.toThrow('Pro')
+      await expect(api().deletePayment('x')).rejects.toThrow('Pro')
+    })
+    expect(previewDb().links.find(l => l.id === 'l-fin').monthly_fee).toBe(30)
+  })
 })
