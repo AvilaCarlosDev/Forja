@@ -48,7 +48,7 @@ Alcance: completar el perfil la primera vez que se entra — foto de perfil, nom
 | 3 | Foto de perfil (`views/forja/Avatar.jsx`): recorte a webp 512 px en el navegador, subida a la carpeta propia, enlace firmado, borra la anterior | Hecho | `forja-db.test.js`; políticas de storage en 0002 |
 | 4 | La base solo deja editar nombre, sexo, fecha y foto; `plan`, `is_admin` y `onboarded_at` blindados | Hecho | pruebas 5 y 6 de `0002_forja_profile_details.test.sql` |
 | 5 | Suite completa y build | Hecho | 3216/3217 (único rojo: `CoachChat.demo-failure`, heredado); `npm run build` ok |
-| 6 | Ejecutar `0002_forja_profile_details.sql` en Supabase real y recorrer el asistente en el navegador | Pendiente, lo hace Carlos | — |
+| 6 | Ejecutar `0002_forja_profile_details.sql` en Supabase real | Hecho | ver fases 3.2–4, tarea 9 |
 
 Nota de entorno (2026-10-06): Node 26.8.1 de esta máquina deja `globalThis.localStorage` roto y la suite entera falla (326 rojos falsos). Arreglado con `NODE_OPTIONS=--no-experimental-webstorage` fijado en `mise set -g`; con eso, `npm test` nace verde.
 
@@ -66,5 +66,9 @@ Alcance: el cliente elige su gimnasio de Punto Fijo (o "Otro", o en casa) y, si 
 | 6 | Pestaña Clientes (entrenador): notificaciones, solicitudes, cupo, ficha con selector de cliente, medidas, meta, historial | Hecho | `CoachFlow.test.jsx`; recorrido en el navegador sin errores de consola |
 | 7 | Pestaña Mi coach (cliente): cambiar gimnasio y entrenador, novedades, medidas en solo lectura | Hecho | `CoachFlow.test.jsx` |
 | 8 | Suite completa y build | Hecho | 3243/3244 con Node 22 (único rojo: `CoachChat.demo-failure`, heredado); build ok |
-| 9 | Ejecutar 0002–0005 en Supabase y sus dos pruebas | Pendiente, lo hace Carlos | resultado esperado: `13 de 13` y `24 de 24` |
+| 9 | Ejecutar 0002–0005 en Supabase y sus dos pruebas | Hecho (2026-10-06, por Claude con permiso de Carlos) | huella SHA-256 de cada archivo verificada en el editor antes de correrlo; Supabase real: **13/13** y **24/24**; después: 0 usuarios de prueba, 5 gimnasios verificados, 0 vínculos, 0 medidas |
 | 10 | Recorrido real con dos cuentas (entrenador y cliente) | Pendiente, con Carlos | — |
+
+## Publicación (2026-10-06)
+
+`forja/3.1-perfil` fusionada por avance rápido en `forja/fase-1` y desplegada en https://forja-trainer.vercel.app: el bundle publicado contiene el asistente, Mi coach y los gimnasios; `forja/login.webm` responde 200 (825 KB); la pantalla de entrada carga sin errores de consola.
