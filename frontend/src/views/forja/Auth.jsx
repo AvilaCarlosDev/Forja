@@ -299,15 +299,25 @@ function AuthBackdrop() {
     v.load()
     const go = () => v.play().catch(() => {})
     const vis = () => { if (document.hidden) v.pause(); else go() }
+    // Si iOS bloquea la reproducción automática (ahorro de batería), arranca con el primer toque.
+    const touch = () => { if (v.paused) go() }
     document.addEventListener('visibilitychange', vis)
+    document.addEventListener('touchstart', touch, { passive: true })
+    document.addEventListener('pointerdown', touch)
+    v.addEventListener('canplay', go, { once: true })
     go()
-    return () => document.removeEventListener('visibilitychange', vis)
+    return () => {
+      document.removeEventListener('visibilitychange', vis)
+      document.removeEventListener('touchstart', touch)
+      document.removeEventListener('pointerdown', touch)
+      v.removeEventListener('canplay', go)
+    }
   }, [play, tall])
   return <div className={'fj-backdrop' + (tall ? ' tall' : '')} aria-hidden="true">
     {play
       ? <video key={tall ? 'tall' : 'wide'} ref={video} muted loop playsInline autoPlay preload="auto" poster={bg.poster} disablePictureInPicture>
-        <source src={bg.webm} type="video/webm" />
         <source src={bg.mp4} type="video/mp4" />
+        <source src={bg.webm} type="video/webm" />
       </video>
       : <img src={bg.poster} alt="" />}
   </div>

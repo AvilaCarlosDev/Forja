@@ -204,6 +204,10 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url)
   if (e.request.method !== 'GET' || url.origin !== location.origin) return
   if (url.pathname.startsWith('/api/') || url.pathname.startsWith(API)) return    // never cache auth/data
+  // Forja: video y peticiones por trozos (Range) van directo a la red. Safari en iPhone pide los
+  // videos por trozos y solo los reproduce si cada trozo vuelve como 206; pasados por aquí volvían
+  // enteros (o de la caché) y el video de la pantalla de entrada se quedaba quieto.
+  if (e.request.headers.has('range') || /\.(mp4|webm|mov|m4v)$/i.test(url.pathname)) return
 
   if (isMediaPath(url.pathname)) {
     e.respondWith(media(e))
