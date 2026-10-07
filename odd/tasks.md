@@ -141,3 +141,16 @@ Alcance: el coach (Free o Pro, dentro de su cupo) arma rutinas para su cliente c
 | 4 | Sincronización al abrir la app y al volver a ella (`AssignedSync`) | Hecho | `Routines.test.jsx` |
 | 5 | Sesiones demo con rutinas asignadas (María, José, Lucía) | Hecho | `scripts/forja-demo-sessions.mjs` |
 | 6 | Suite y build | Hecho | **3317/3317**; SQL 9/9 archivos; build ok |
+
+## Seguridad: prioritarias de Cyber Neo y términos al entrar (2026-10-07, noche)
+
+Informe: `~/cyber-neo-report-Forja-orquestador-2026-10-07.md`.
+
+| # | Tarea | Estado | Evidencia |
+|---|---|---|---|
+| 1 | CN-004: sesiones demo fuera de `public/` (a `frontend/demo/`, solo con `npm run dev`); el cargador ya no usa `eval` ni `localStorage.clear()` y se niega si hay sesión real o entrenamientos | Hecho | `demo/cargar.test.js` 6/6; el build no las incluye |
+| 2 | CN-005: `frontend/vercel.json` con CSP, `frame-ancestors 'none'`, nosniff, Referrer-Policy, Permissions-Policy y HSTS; el script de idioma pasa a `public/lang-dir.js` | Hecho | `security-headers.test.js` 5/5; build servido con las cabeceras en Chromium: 6 pantallas sin violaciones |
+| 3 | Casilla obligatoria de términos y privacidad en «Entrar»; Google/Apple no salen sin ella (también en «Crear cuenta») | Hecho | `Auth.terms.test.jsx` 5/5; captura |
+| 4 | CN-003: `0013_forja_perfil_privado.sql`, lectura de `profiles` por columna (sin `is_admin`, `terms_accepted_at`, `role_chosen` ni fechas internas); la fila propia por `forja_me()` | Hecho | `0013_forja_perfil_privado.test.sql` **8/8** (4/8 sin el revoke); `forja-session.test.js` 3/3 |
+| 5 | Suite y build | Hecho | **3337/3337**; SQL 10/10 archivos; build ok |
+| 6 | Ejecutar 0008–0013 en Supabase real y `vercel --prod` | Pendiente, con OK de Carlos | — |
