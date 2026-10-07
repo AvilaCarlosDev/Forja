@@ -128,3 +128,16 @@ Alcance: el entrenador Pro arma la dieta de su cliente (comidas del día con ali
 | 1 | 8 rojos (SyncBanner, idioma por defecto, media-prefetch) los causaba `frontend/.env.local` (modo vista previa de Forja y CDN de imágenes): `vite.config.js` → `test.env` los anula durante las pruebas | Hecho | la suite ya no depende del `.env.local` de cada máquina |
 | 2 | `CoachChat.demo-failure` fallaba a veces: la importación dinámica del Coach demo no alcanzaba a resolverse en las 20 microtareas de `flush` con la máquina ocupada. La prueba ahora la carga antes (`beforeAll`) | Hecho | 3 corridas sueltas y 2 suites completas en verde |
 | 3 | Suite completa | Hecho | **3308/3308** con Node 22, dos veces; SQL 8/8 archivos OK (0002, 0005–0011); build ok |
+
+## Fase 3 — Rutinas asignadas (2026-10-07)
+
+Alcance: el coach (Free o Pro, dentro de su cupo) arma rutinas para su cliente con el buscador de ejercicios de openGym y les pone series, repeticiones, peso e indicaciones. El cliente recibe el aviso, la rutina entra a su plan de la semana y a «Entrenar», y se entrena tal cual (sin progresión automática). En Plan la ve en solo lectura, con la animación de cada ejercicio.
+
+| # | Tarea | Estado | Evidencia |
+|---|---|---|---|
+| 1 | `0012_forja_rutinas.sql`: tabla `assigned_routines`, lectura por RLS, escritura solo por `forja_set_routine` / `forja_delete_routine` (coach activo dentro del cupo), validación y aviso `routine_assigned` | Hecho | `0012_forja_rutinas.test.sql` **10/10**; 0002–0011 siguen verdes |
+| 2 | `lib/forja-routines.js`: formulario, conversión a rutina de openGym (`excludeFromProgression`), mezcla en el plan y la semana sin tocar las rutinas propias | Hecho | `forja-routines.test.js` 6/6 (incluye que la sesión abre con el peso del coach aunque el historial sea mayor) |
+| 3 | Pantallas: «Rutinas» en la ficha del cliente (asignar, editar, ordenar, borrar), «Mis rutinas» en Mi coach, rutina asignada en solo lectura desde Plan, detalle del ejercicio con su animación | Hecho | `Routines.test.jsx` 3/3; navegador |
+| 4 | Sincronización al abrir la app y al volver a ella (`AssignedSync`) | Hecho | `Routines.test.jsx` |
+| 5 | Sesiones demo con rutinas asignadas (María, José, Lucía) | Hecho | `scripts/forja-demo-sessions.mjs` |
+| 6 | Suite y build | Hecho | **3317/3317**; SQL 9/9 archivos; build ok |

@@ -43,6 +43,7 @@ import CoachIntake from './views/CoachIntake.jsx'
 import CoachSetup from './views/CoachSetup.jsx'
 import ForjaAuth from './views/forja/Auth.jsx'
 import ForjaOnboarding from './views/forja/Onboarding.jsx'
+import AssignedSync from './views/forja/AssignedSync.jsx'
 import { ClientsHome, ClientDetail } from './views/forja/Clients.jsx'
 import Finanzas from './views/forja/Finanzas.jsx'
 import MyCoach from './views/forja/MyCoach.jsx'
@@ -193,6 +194,7 @@ function Shell() {
       <div id="app" className="vfade" key={loc.pathname}>
         <ErrorBoundary>
           {forjaRole && <InstallBanner />}
+          {forjaRole === 'client' && <AssignedSync clientId={forjaProfile.row?.id} />}
           {!authed ? (FORJA_AUTH_UI ? <ForjaAuth /> : <Login />) : needsForjaProfile ? <ForjaOnboarding /> : needsMobileOnboarding ? <MobileOnboarding /> : (
             <Routes>
               <Route path="/home" element={<Home />} />

@@ -9,6 +9,8 @@ import { t, exerciseNameFor, exerciseNameClass } from '../lib/i18n.js'
 import { supersetUnits, moveSupersetUnit, cleanupSg, exLine, defaultConfig } from '../lib/history.js'
 import { Thumb } from '../components/Media.jsx'
 import { glyphPicker, exercisePicker, exConfigSheet, confirmSheet } from '../sheets.jsx'
+import { isAssigned } from '../lib/forja-routines.js'
+import AssignedRoutine from './forja/AssignedRoutine.jsx'
 import Icon from '../components/Icon.jsx'
 import { glyphOf } from '../lib/glyphs.js'
 import { Button, Row, SelectRow, Switch } from '../components/ui.jsx'
@@ -315,7 +317,15 @@ function useRoutineReorder(routineIdentity, exercises, onDrop) {
   return { listRef, drag, onClickCapture }
 }
 
+// Forja: a routine the coach assigned is read-only for the client — it opens as the coach's
+// prescription with each exercise's picture, never in the editor (the next sync would undo edits).
 export default function RoutineEdit() {
+  const { id } = useParams()
+  const r = useStore(s => s.S.routines.find(x => x.id === id))
+  return r && isAssigned(r) ? <AssignedRoutine r={r} /> : <RoutineEditor />
+}
+
+function RoutineEditor() {
   const nav = useNavigate()
   const { id } = useParams()
   const S = useStore(s => s.S)

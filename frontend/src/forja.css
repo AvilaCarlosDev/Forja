@@ -213,3 +213,22 @@
 .fj-perks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:15px}
 .fj-perks li{display:flex;align-items:flex-start;gap:8px}
 .fj-perks .icn{color:var(--acc);flex:none;margin-top:2px}
+/* Rutinas asignadas: ejercicios con su imagen y la dosis del coach */
+.fj-routine{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-top:1px solid var(--sep-op)}
+.fj-routine:first-of-type{border-top:0}
+.fj-routine-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.fj-routine-head b{font-size:16px}
+.fj-ex-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.fj-ex-open{display:flex;align-items:center;gap:12px;width:100%;padding:6px;border:0;border-radius:12px;background:var(--bg);color:var(--label);font:inherit;text-align:start;cursor:pointer}
+.fj-ex-open:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.fj-ex-thumb{flex:none;display:block;border-radius:10px;overflow:hidden;background:#fff}
+.fj-ex-thumb img{width:100%;height:100%;object-fit:contain}
+.fj-ex-media{border-radius:var(--r-card);overflow:hidden;background:#fff;display:grid;place-items:center}
+.fj-ex-media img{width:100%;max-height:320px;object-fit:contain}
+.fj-ex-edit{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:12px;background:var(--bg)}
+.fj-ex-edit-head{display:flex;align-items:center;gap:10px}
+.fj-ex-edit-head b{flex:1;min-width:0;font-size:15px}
+.fj-ex-edit-tools{display:flex;gap:2px}
+.fj-ex-dose{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fj-ex-dose label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--label-2)}
+.fj-days .fj-chip{min-width:0;flex:1 1 0;padding:10px 4px}

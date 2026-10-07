@@ -12,6 +12,7 @@ import { useUI } from '../../store/useUI.js'
 import { Avatar } from './Avatar.jsx'
 import Metrics from './Metrics.jsx'
 import Diet from './Diet.jsx'
+import Routines from './Routines.jsx'
 import { Loading, ErrorNote, useLoad } from './parts.jsx'
 import Upgrade from './Upgrade.jsx'
 import { refreshBadge } from './badge.js'
@@ -151,6 +152,7 @@ export function ClientDetail() {
         <div className="dim small">Cliente desde {new Date(link.decided_at || link.requested_at).toLocaleDateString('es-VE')}</div>
       </div>
     </div>
+    <Routines clientId={c.id} clientName={c.name} canEdit />
     <Metrics clientId={c.id} canEdit pro={effectivePlan(row) === 'pro'} />
     <Diet clientId={c.id} clientName={c.name} canEdit pro={effectivePlan(row) === 'pro'}
       otherClients={active.filter(l => l.client_id !== c.id).map(l => ({ id: l.client_id, name: l.client?.name || 'Cliente' }))} />

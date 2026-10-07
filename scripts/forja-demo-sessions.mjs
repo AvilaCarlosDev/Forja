@@ -11,6 +11,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildDemoState } from '../frontend/src/lib/demoSeed.js'
 import { foodById, itemFromFood } from '../frontend/src/lib/forja-diet.js'
+import { toLocalRoutine } from '../frontend/src/lib/forja-routines.js'
 
 const out = join(dirname(fileURLToPath(import.meta.url)), '..', 'frontend', 'public')
 const TODAY = new Date(); TODAY.setHours(12, 0, 0, 0)
@@ -115,6 +116,23 @@ function training({ weeks = 12, loadScale = 1, bwFrom, bwTo, targetW, body }) {
   return { ...s, targetW, body, lang: 'es', langAuto: true, unit: 'kg', _ts: Date.now() }
 }
 
+// Las rutinas de un historial como rutinas que asignó un coach (0012): mismos días y ejercicios,
+// con el peso que el cliente viene levantando. `adopt` las deja además en su app, ya sincronizadas.
+function assignedFrom(st, clientId, trainerId, coachName, adopt = false) {
+  const daysOf = id => Object.entries(st.week).filter(([, v]) => [].concat(v).includes(id)).map(([d]) => Number(d))
+  const rows = st.routines.map(r => ({ id: id('rt'), client_id: clientId, trainer_id: trainerId, name: r.name, days: daysOf(r.id),
+    exercises: r.ex.map(e => ({ id: e.id, sets: e.sets, reps: e.reps, weight: st.exWeights[e.id]?.w || 0 })),
+    note: 'Calienta 10 minutos antes de empezar.', created_at: stamp(daysAgo(60)), updated_at: stamp(daysAgo(3)), from: r.id }))
+  if (adopt) {
+    const local = Object.fromEntries(rows.map(r => [r.from, toLocalRoutine(r, coachName)]))
+    for (const w of st.workouts) if (local[w.routineId]) w.routineId = local[w.routineId].id
+    st.routines = Object.values(local)
+    st.week = {}
+    for (const r of st.routines) for (const d of r.assigned.days) st.week[d] = [...(st.week[d] || []), r.id]
+  }
+  return rows.map(({ from, ...r }) => r)
+}
+
 function file(title, store) {
   const lines = [
     `// ${title} — pega esto en la consola (DevTools) de http://localhost:5180`,
@@ -189,13 +207,17 @@ function file(title, store) {
       ['Cena', '20:30', [['pollo', 180], ['pasta', 210], ['vegetales', 150], ['aceite-oliva', 7]]],
     ], 'Superávit moderado. Si el peso no sube en 2 semanas, agregar ½ taza de arroz al almuerzo.', 12),
   }
+  const routines = [
+    ...assignedFrom(training({ weeks: 2, loadScale: 0.55, bwFrom: 70, bwTo: 70, body: 'female' }), 'c-demo-1', me, 'Coach Demo'),
+    ...assignedFrom(training({ weeks: 2, loadScale: 0.9, bwFrom: 70, bwTo: 70, body: 'male' }), 'c-demo-2', me, 'Coach Demo'),
+  ]
   const notifications = [
     { id: id('n'), user_id: me, kind: 'link_request', link_id: links[3].id, actor_id: 'c-demo-4', actor_name: 'Pedro Demo', created_at: stamp(daysAgo(1)), read_at: null },
   ]
   const profile = { id: me, name: 'Coach Demo', sex: 'male', role: 'trainer', plan: 'pro', birth_date: '1990-05-10', remote: false, onboarded_at: stamp(daysAgo(90)) }
   writeFileSync(join(out, 'sesion-trainer.js'), file('Coach Demo (entrenador Pro)', {
     forja_preview_db_v1: { gyms: GYMS, people: [...TRAINERS, ...clients], trainerGyms: { ...trainerGyms, [me]: ['g-gs-sambil', 'g-gs-virtudes'] },
-      links, notifications, metrics, goals, payments: pays, diets, seededFor: me },
+      links, notifications, metrics, goals, payments: pays, diets, routines, seededFor: me },
     gym_guest: 1,
     forja_session_v1: { access_token: 'preview', refresh_token: '', expires_at: 0, preview: true,
       profile: { id: me, email: 'coach@demo.forja', name: 'Coach Demo', sex: 'male', role: 'trainer' } },
@@ -217,7 +239,10 @@ function file(title, store) {
   const goals = { [me]: { client_id: me, goal: 'Llegar a 62 kg y marcar abdomen', target_weight_kg: 62, target_date: iso(daysAgo(-60)), updated_by: coach, updated_at: stamp(daysAgo(85)) } }
   const diets = { [me]: diet(me, coach, { kcal: 1700, protein: 135, carbs: 185, fat: 45 }, CUT_F,
     'Toma 2 L de agua al día. Si entrenas de noche, pasa la merienda de la tarde a después del entreno.', 15) }
+  const gym = training({ weeks: 24, loadScale: 0.55, bwFrom: 70.2, bwTo: 63.6, targetW: 62, body: 'female' })
+  const routines = assignedFrom(gym, me, coach, 'Andrea Rojas (demo)', true)
   const notifications = [
+    { id: id('n'), user_id: me, kind: 'routine_assigned', link_id: l.id, actor_id: coach, actor_name: 'Andrea Rojas (demo)', created_at: stamp(daysAgo(0)), read_at: null },
     { id: id('n'), user_id: me, kind: 'metrics_added', link_id: l.id, actor_id: coach, actor_name: 'Andrea Rojas (demo)', created_at: stamp(daysAgo(0)), read_at: null },
     { id: id('n'), user_id: me, kind: 'diet_updated', link_id: l.id, actor_id: coach, actor_name: 'Andrea Rojas (demo)', created_at: stamp(daysAgo(1)), read_at: null },
     { id: id('n'), user_id: me, kind: 'link_accepted', link_id: l.id, actor_id: coach, actor_name: 'Andrea Rojas (demo)', created_at: stamp(daysAgo(24 * 7)), read_at: stamp(daysAgo(24 * 7)) },
@@ -225,11 +250,11 @@ function file(title, store) {
   const profile = { id: me, name: 'Lucía Demo', sex: 'female', role: 'client', plan: 'free', birth_date: '1996-03-14', gym_id: 'g-gs-sambil', remote: false, onboarded_at: stamp(daysAgo(86)) }
   writeFileSync(join(out, 'sesion-cliente.js'), file('Lucía Demo (clienta)', {
     forja_preview_db_v1: { gyms: GYMS, people: trainers, trainerGyms, links: [l], notifications, metrics, goals,
-      payments: payments(me, coach, 30, 5, 0, ['Pago móvil Provincial', 'Pago móvil Provincial', 'Zelle']), diets },
+      payments: payments(me, coach, 30, 5, 0, ['Pago móvil Provincial', 'Pago móvil Provincial', 'Zelle']), diets, routines },
     gym_guest: 1,
     forja_session_v1: { access_token: 'preview', refresh_token: '', expires_at: 0, preview: true,
       profile: { id: me, email: 'lucia@demo.forja', name: 'Lucía Demo', sex: 'female', role: 'client' } },
-    gym_state_v1: training({ weeks: 24, loadScale: 0.55, bwFrom: 70.2, bwTo: 63.6, targetW: 62, body: 'female' }),
+    gym_state_v1: gym,
     forja_preview_profile_v1: profile,
   }))
 }

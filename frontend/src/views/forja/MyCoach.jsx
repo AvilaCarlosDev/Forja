@@ -12,6 +12,7 @@ import GymPicker from './GymPicker.jsx'
 import TrainerPicker from './TrainerPicker.jsx'
 import Metrics from './Metrics.jsx'
 import Diet from './Diet.jsx'
+import Routines from './Routines.jsx'
 import { Panel, Loading, ErrorNote, useLoad } from './parts.jsx'
 import { refreshBadge } from './badge.js'
 import '../../forja.css'
@@ -114,6 +115,11 @@ export default function MyCoach() {
         {status !== 'al_dia' && <p className="dim small">Cuando pagues, tu entrenador lo registra aquí y queda al día.</p>}
       </section>
     })()}
+
+    {active && <>
+      <h2 className="fj-subtitle">Mis rutinas</h2>
+      <Routines clientId={row.id} canEdit={false} coachName={active.trainer?.name} />
+    </>}
 
     {active && <>
       <h2 className="fj-subtitle">Mi dieta</h2>

@@ -50,6 +50,9 @@ export const remoteApi = {
   deletePayment: id => db.rpc('forja_delete_payment', { p_id: id }),
   myPayments: () => db.select('payments', `select=*&or=(trainer_id.eq.${me()},client_id.eq.${me()})&order=period.desc,paid_at.desc`),
   hiddenClients: () => db.rpc('forja_hidden_clients'),
+  routines: clientId => db.select('assigned_routines', `select=*&client_id=eq.${clientId}&order=created_at.asc`),
+  setRoutine: (clientId, id, r) => db.rpc('forja_set_routine', { p_client: clientId, p_id: id || null, p_name: r.name, p_days: r.days, p_exercises: r.exercises, p_note: r.note || null }),
+  deleteRoutine: id => db.rpc('forja_delete_routine', { p_id: id }),
   myLinks: () => db.select('coach_links', `select=${encodeURIComponent(LINK_SELECT)}&or=(client_id.eq.${me()},trainer_id.eq.${me()})&status=in.(pending,active)&order=requested_at.desc`),
   notifications: () => db.select('notifications', 'select=*&order=created_at.desc&limit=30'),
   markRead: () => db.update('notifications', { user_id: me() }, { read_at: new Date().toISOString() }),
@@ -182,6 +185,29 @@ export const previewApi = {
     save(d); return ok(null)
   },
   hiddenClients: () => ok(hiddenLinkIds(load()).length),
+  routines: clientId => ok((load().routines || []).filter(r => r.client_id === clientId)),
+  setRoutine(clientId, id, r) {
+    const d = load()
+    if (activeTrainer(d, clientId) !== me() || hiddenLinkIds(d).includes(d.links.find(l => l.client_id === clientId && l.status === 'active')?.id))
+      fail('Ese cliente no está vinculado a ti')
+    d.routines ||= []
+    const row = { client_id: clientId, trainer_id: me(), name: r.name, days: r.days, exercises: r.exercises, note: r.note || null, updated_at: now() }
+    let out
+    if (id) {
+      const i = d.routines.findIndex(x => x.id === id && x.client_id === clientId)
+      if (i < 0) fail('Esa rutina no es de este cliente')
+      out = d.routines[i] = { ...d.routines[i], ...row }
+    } else {
+      if (d.routines.filter(x => x.client_id === clientId).length >= 14) fail('El cliente ya tiene 14 rutinas')
+      out = { id: uid(), created_at: now(), ...row }; d.routines.push(out)
+    }
+    notifyClient(d, clientId, 'routine_assigned'); save(d); return ok(out)
+  },
+  deleteRoutine(id) {
+    const d = load(), r = (d.routines || []).find(x => x.id === id)
+    if (!r || activeTrainer(d, r.client_id) !== me()) fail('Esa rutina no es de un cliente tuyo')
+    d.routines = d.routines.filter(x => x.id !== id); save(d); return ok(null)
+  },
   myLinks() {
     const d = load()
     const pick = (p, keys) => p && Object.fromEntries(keys.map(k => [k, p[k] ?? null]))
