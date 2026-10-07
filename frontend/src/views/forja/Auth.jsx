@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../../store/useStore.js'
 import { useUI } from '../../store/useUI.js'
 import Icon from '../../components/Icon.jsx'
-import { Button, Segmented } from '../../components/ui.jsx'
+import { Button } from '../../components/ui.jsx'
+import { Choice } from './parts.jsx'
 import { BRAND } from '../../lib/brand.js'
 import { validateSignup, parseAuthHash } from '../../lib/forja-auth.js'
 import { auth, getSession, setSession, syncSession, ROLE_LABEL } from '../../lib/forja-session.js'
@@ -91,7 +92,7 @@ function Register({ go, onSent }) {
     e.preventDefault(); setErr('')
     const bad = validateSignup(f)
     setErrors(bad)
-    if (Object.keys(bad).length) { document.getElementById('fj-reg-' + Object.keys(bad)[0])?.focus?.(); return }
+    if (Object.keys(bad).length) { (document.getElementById('fj-reg-' + Object.keys(bad)[0] + '-first') || document.getElementById('fj-reg-' + Object.keys(bad)[0]))?.focus?.(); return }
     if (FORJA_AUTH_PREVIEW) {
       const profile = { id: 'preview', email: f.email.trim().toLowerCase(), name: f.name.trim(), sex: f.sex, role: f.role }
       setSession({ access_token: 'preview', refresh_token: '', expires_at: 0, preview: true, profile })
@@ -135,7 +136,7 @@ function Register({ go, onSent }) {
       </Field>
       <div className="fj-field">
         <div className="fj-legend" id="fj-reg-sex">Sexo</div>
-        <Segmented options={[{ value: 'male', label: 'Hombre' }, { value: 'female', label: 'Mujer' }]} value={f.sex} onChange={v => set('sex', v)} />
+        <Choice id="fj-reg-sex" options={[{ value: 'male', label: 'Hombre' }, { value: 'female', label: 'Mujer' }]} value={f.sex} onChange={v => set('sex', v)} />
         <div className="dim small">Se usa para dibujar el mapa muscular y las referencias de progreso.</div>
         {errors.sex && <div className="fj-err" role="alert">{errors.sex}</div>}
       </div>
