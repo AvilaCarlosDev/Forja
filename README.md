@@ -19,7 +19,7 @@ Gimnasio, vínculo coach–cliente, medidas y progreso: en el teléfono y en la 
 
 | | Entrenador | Cliente |
 |---|---|---|
-| **Cuenta** | Correo y contraseña, con confirmación por correo | Igual; menores de 18 con permiso de madre, padre o tutor |
+| **Cuenta** | Correo y contraseña o Google; foto de perfil | Igual; menores de 18 con permiso de madre, padre o tutor |
 | **Gimnasio** | Elige uno o varios donde trabaja | Elige el suyo, o «entreno en casa» |
 | **Vínculo** | Recibe la solicitud como notificación y acepta o rechaza | Elige a su entrenador entre los de su gimnasio y puede cambiarlo |
 | **Medidas** | Carga peso, talla, grasa corporal y visceral, masa muscular, perímetros y meta | Las ve en solo lectura; sin entrenador, carga lo básico él mismo |
@@ -49,6 +49,16 @@ Además, todo lo que trae openGym: más de 1.300 ejercicios, planificador semana
 </tr>
 </table>
 
+**Completar el perfil** — la primera vez que se entra:
+
+<table>
+<tr>
+<td align="center" width="33%"><img src="docs/screenshots/movil-09-perfil.jpg" alt="Tus datos: foto de perfil, nombre, sexo y fecha de nacimiento"><br><sub>Foto y datos</sub></td>
+<td align="center" width="33%"><img src="docs/screenshots/movil-10-tutor.jpg" alt="Menor de edad: permiso de madre, padre o tutor"><br><sub>Menores: permiso del tutor</sub></td>
+<td align="center" width="33%"><img src="docs/screenshots/movil-11-tipo-de-cuenta.jpg" alt="Cuenta creada con Google: elegir Personal Trainer o Cliente y aceptar los términos"><br><sub>Entrar con Google: tipo de cuenta</sub></td>
+</tr>
+</table>
+
 ### En la computadora
 
 <table>
@@ -62,7 +72,7 @@ Además, todo lo que trae openGym: más de 1.300 ejercicios, planificador semana
 </tr>
 </table>
 
-<sub>Capturas de la versión 0.6 con datos de ejemplo. Se regeneran con <code>scripts/forja-screenshots.mjs</code>.</sub>
+<sub>Capturas de la versión 0.8 con datos de ejemplo. Se regeneran con <code>scripts/forja-screenshots.mjs</code>.</sub>
 
 ## Instálala en tu teléfono
 

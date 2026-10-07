@@ -102,6 +102,26 @@ try {
       console.log('enlace instalar:', has); await sleep(1200)
       await p.screenshot({ path: `${OUT}/movil-03-instalar.png` }); console.log('ok instalar')
     }
+    // 3a. Asistente: tus datos (foto, nombre, sexo, fecha de nacimiento)
+    await setState(p, {
+      gym_guest: '1', forja_session_v1: session('client', 'yo', 'Valentina Ruiz'),
+      forja_preview_profile_v1: { id: 'yo', name: 'Valentina Ruiz', sex: 'female', role: 'client', plan: 'free', birth_date: '1998-02-10' },
+    })
+    await shot(p, `${kind}-09-perfil`, '', 1500)
+    // 3b. Menor de edad: permiso de madre, padre o tutor
+    await setState(p, {
+      gym_guest: '1', forja_session_v1: session('client', 'yo', 'Sofía Ruiz'),
+      forja_preview_profile_v1: { id: 'yo', name: 'Sofía Ruiz', sex: 'female', role: 'client', plan: 'free', birth_date: '2010-03-15' },
+    })
+    await p.goto('about:blank'); await p.goto(BASE, { waitUntil: 'networkidle2' }); await sleep(1500)
+    await clickText(p, 'Continuar'); await sleep(1000)
+    await p.screenshot({ path: `${OUT}/${kind}-10-tutor.png` }); console.log('ok tutor')
+    // 3c. Cuenta creada con Google: tipo de cuenta y términos
+    await setState(p, {
+      gym_guest: '1', forja_session_v1: session('client', 'yo', 'Ana Google'),
+      forja_preview_profile_v1: { id: 'yo', name: 'Ana Google', sex: null, role: 'client', role_chosen: false, plan: 'free' },
+    })
+    await shot(p, `${kind}-11-tipo-de-cuenta`, '', 1500)
     // 3. Asistente: gimnasio
     await setState(p, {
       gym_guest: '1', forja_session_v1: session('client', 'yo', 'Valentina Ruiz'),
