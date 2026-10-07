@@ -154,3 +154,4 @@ Informe: `~/cyber-neo-report-Forja-orquestador-2026-10-07.md`.
 | 4 | CN-003: `0013_forja_perfil_privado.sql`, lectura de `profiles` por columna (sin `is_admin`, `terms_accepted_at`, `role_chosen` ni fechas internas); la fila propia por `forja_me()` | Hecho | `0013_forja_perfil_privado.test.sql` **8/8** (4/8 sin el revoke); `forja-session.test.js` 3/3 |
 | 5 | Suite y build | Hecho | **3337/3337**; SQL 10/10 archivos; build ok |
 | 6 | Ejecutar 0008–0013 en Supabase real y `vercel --prod` | Hecho | pruebas en producción: 0008 8/8, 0009 11/11, 0010 6/6, 0011 9/9, 0012 10/10, 0013 8/8; forja-trainer.vercel.app con CSP, sin sesiones demo (404), service worker activo |
+| 7 | CN-001: Capacitor 7.6.8 → 7.6.9 (core, android, ios, cli; GHSA-rvm3-566m-v7fv) | Hecho | `npm audit --omit=dev`: 0 vulnerabilidades; el aviso ya no aparece en `npm audit`; suite y build ok |
