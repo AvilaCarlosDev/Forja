@@ -121,7 +121,7 @@ export default function MyCoach() {
     </>}
 
     <h2 className="fj-subtitle">Mis medidas y avances</h2>
-    <Metrics clientId={row.id} canEdit={clientCanEditMetrics(active)} pro={trainerPro}
+    <Metrics clientId={row.id} canEdit={clientCanEditMetrics(active)} pro={trainerPro} viewer="client"
       readOnlyNote={active ? (active.trainer?.name
         ? `Las carga y corrige ${active.trainer.name}, tu entrenador. Aquí las ves en solo lectura.`
         : 'Las carga tu entrenador. Aquí las ves en solo lectura.') : null} />

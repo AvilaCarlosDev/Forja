@@ -108,3 +108,15 @@ Alcance: el entrenador Pro arma la dieta de su cliente (comidas del día con ali
 | 5 | Fase 2: `0010_forja_avisos.sql`, avisos al cliente al guardar su dieta o cargarle medidas (sin repetir en el día si no leyó) | Hecho | `0010_forja_avisos.test.sql` **6/6** en PGlite; 0002–0009 siguen verdes |
 | 6 | Suite y build | Hecho | 3293/3302 (los 9 rojos de `.env.local`); build ok |
 | 7 | Ejecutar 0008, 0009 y 0010 en Supabase real y `vercel --prod` | Pendiente, con OK de Carlos | — |
+
+## Después de v0.9.0 (2026-10-07, tarde)
+
+| # | Tarea | Estado | Evidencia |
+|---|---|---|---|
+| 1 | Tarjeta del gimnasio con foto del logo (cámara o galería), dirección y logos en la lista | Hecho | `ProfileEdit.test.jsx` |
+| 2 | Tarjeta de perfil en el inicio; botones en vez de enlaces en Mi coach, meta y dieta | Hecho | navegador |
+| 3 | Check-in con QR de openGym escondido en Forja (la asistencia va aparte, fase 5) | Hecho | `Home`/`Settings` tests |
+| 4 | Peso (obligatorio) y talla al completar el perfil; sin pedir peso antes de cada entrenamiento | Hecho | `Onboarding.test.jsx`, `forja-profile.test.js` |
+| 5 | Funciones Pro bloqueadas (dieta, evolución, comparativa) abren «Mejora tu suscripción» o explican que depende del coach; botón de WhatsApp de planes | Hecho | `Diet.test.jsx`, `FreeLimit.test.jsx` |
+| 6 | `0011_forja_limite_free.sql`: al vencer Pro, el coach ve solo sus 5 clientes más antiguos (vínculos, perfiles, fotos, medidas, metas y dieta) | Hecho | `0011_forja_limite_free.test.sql` **9/9**; 0002–0010 siguen verdes; `FreeLimit.test.jsx` 2/2 |
+| 7 | Suite y build | Hecho | 3299/3308 (los 9 rojos de `.env.local`); build ok |

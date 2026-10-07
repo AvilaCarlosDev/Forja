@@ -13,6 +13,7 @@ import { Avatar } from './Avatar.jsx'
 import Metrics from './Metrics.jsx'
 import Diet from './Diet.jsx'
 import { Loading, ErrorNote, useLoad } from './parts.jsx'
+import Upgrade from './Upgrade.jsx'
 import { refreshBadge } from './badge.js'
 import '../../forja.css'
 
@@ -68,6 +69,8 @@ export function ClientsHome() {
   const pending = mine.filter(l => l.status === 'pending')
   const active = mine.filter(l => l.status === 'active')
   const full = !pro && active.length >= FREE_CLIENT_LIMIT
+  const hidden = useLoad(() => api().hiddenClients(), [pro])
+  const [upgrade, setUpgrade] = useState(false)
   const myGyms = useLoad(async () => { const ids = await api().myTrainerGyms(); return ids.length ? api().gymsByIds(ids) : [] }, [])
   const options = gymOptions(myGyms.data || [], active)
   const [gym, setGym] = useState(savedGym)
@@ -87,6 +90,11 @@ export function ClientsHome() {
       {full && <div className="fj-note warn">Tienes {FREE_CLIENT_LIMIT} clientes, el máximo del plan Free. Pásate a Pro para aceptar más.</div>}
       <ul className="fj-requests">{pending.map(l => <Request key={l.id} link={l} full={full} onDone={reload} />)}</ul>
     </section>}
+    {hidden.data > 0 && <div className="fj-note warn" role="status">
+      <b>Tu plan Pro venció.</b> Con Free ves a tus {FREE_CLIENT_LIMIT} clientes más antiguos; {hidden.data === 1 ? 'otro queda oculto' : `otros ${hidden.data} quedan ocultos`} hasta que renueves. No se pierde nada: al renovar vuelven todos.
+      <div className="fj-row fj-note-actions"><Button variant="primary" size="sm" type="button" onClick={() => setUpgrade(true)}>Renovar Pro</Button></div>
+    </div>}
+    {upgrade && <Upgrade feature="Ver a todos tus clientes" onClose={() => setUpgrade(false)} />}
     {links.data && <section className="fj-card">
       <div className="fj-card-head"><h3>Mis clientes</h3><span className="dim small">{active.length}{pro ? '' : ` de ${FREE_CLIENT_LIMIT}`} · plan {pro ? 'Pro' : 'Free'}</span></div>
       {active.length > 0 && options.length > 1 && <div className="fj-field">

@@ -49,6 +49,7 @@ export const remoteApi = {
   }),
   deletePayment: id => db.rpc('forja_delete_payment', { p_id: id }),
   myPayments: () => db.select('payments', `select=*&or=(trainer_id.eq.${me()},client_id.eq.${me()})&order=period.desc,paid_at.desc`),
+  hiddenClients: () => db.rpc('forja_hidden_clients'),
   myLinks: () => db.select('coach_links', `select=${encodeURIComponent(LINK_SELECT)}&or=(client_id.eq.${me()},trainer_id.eq.${me()})&status=in.(pending,active)&order=requested_at.desc`),
   notifications: () => db.select('notifications', 'select=*&order=created_at.desc&limit=30'),
   markRead: () => db.update('notifications', { user_id: me() }, { read_at: new Date().toISOString() }),
@@ -109,6 +110,14 @@ function notifyClient(d, clientId, kind) {
   const today = now().slice(0, 10)
   if (d.notifications.some(n => n.user_id === clientId && n.kind === kind && n.actor_id === me() && !n.read_at && n.created_at.slice(0, 10) === today)) return
   notify(d, clientId, kind, d.links.find(l => l.client_id === clientId && l.trainer_id === me() && l.status === 'active')?.id || null, me())
+}
+// Igual que forja_link_visible() en 0011: con Free, el entrenador ve solo sus 5 clientes activos
+// más antiguos; el resto queda oculto (en cualquier gimnasio) hasta que renueve Pro.
+function hiddenLinkIds(d) {
+  if (getProfile().row?.role !== 'trainer' || effectivePlan(getProfile().row || {}) === 'pro') return []
+  const key = l => (l.decided_at || l.requested_at) + l.id
+  return d.links.filter(l => l.trainer_id === me() && l.status === 'active').sort((a, b) => key(a).localeCompare(key(b)))
+    .slice(FREE_CLIENT_LIMIT).map(l => l.id)
 }
 const activeTrainer = (d, clientId) => d.links.find(l => l.client_id === clientId && l.status === 'active')?.trainer_id || null
 
@@ -172,10 +181,12 @@ export const previewApi = {
     }
     save(d); return ok(null)
   },
+  hiddenClients: () => ok(hiddenLinkIds(load()).length),
   myLinks() {
     const d = load()
     const pick = (p, keys) => p && Object.fromEntries(keys.map(k => [k, p[k] ?? null]))
-    return ok(d.links.filter(l => (l.client_id === me() || l.trainer_id === me()) && ['pending', 'active'].includes(l.status))
+    const hidden = new Set(hiddenLinkIds(d))
+    return ok(d.links.filter(l => (l.client_id === me() || l.trainer_id === me()) && ['pending', 'active'].includes(l.status) && !hidden.has(l.id))
       .map(l => ({ ...l,
         client: pick(person(d, l.client_id), ['id', 'name', 'avatar_path', 'birth_date', 'sex', 'gym_id', 'remote']),
         trainer: pick(person(d, l.trainer_id), ['id', 'name', 'avatar_path', 'plan', 'plan_expires_at']) }))
