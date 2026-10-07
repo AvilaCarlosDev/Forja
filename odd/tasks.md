@@ -51,3 +51,20 @@ Alcance: completar el perfil la primera vez que se entra — foto de perfil, nom
 | 6 | Ejecutar `0002_forja_profile_details.sql` en Supabase real y recorrer el asistente en el navegador | Pendiente, lo hace Carlos | — |
 
 Nota de entorno (2026-10-06): Node 26.8.1 de esta máquina deja `globalThis.localStorage` roto y la suite entera falla (326 rojos falsos). Arreglado con `NODE_OPTIONS=--no-experimental-webstorage` fijado en `mise set -g`; con eso, `npm test` nace verde.
+
+## Fases 3.2, 3.3 y 4 — Gimnasios, vínculo entrenador–cliente y medidas
+
+Alcance: el cliente elige su gimnasio de Punto Fijo (o "Otro", o en casa) y, si tiene, su entrenador de ese gimnasio; el entrenador elige uno o varios gimnasios. La solicitud le llega como notificación; al aceptar, el entrenador carga y corrige peso, talla, grasa, medidas y meta, y el cliente las ve en solo lectura. El cliente puede cambiar de gimnasio y de entrenador; el nuevo entrenador acepta y ve todo el historial, y el anterior pierde el acceso.
+
+| # | Tarea | Estado | Evidencia |
+|---|---|---|---|
+| 1 | Lista de gimnasios con fuente oficial | Hecho | `docs/research/gimnasios-punto-fijo.md`: Gold Stars (Sambil, Las Virtudes, Ciudad del Viento), Altitude, New Life Training Center |
+| 2 | `0003_forja_gyms.sql`: gimnasios, "Otro" con red social o logo (sin verificar, usable enseguida), varios gimnasios por entrenador | Hecho | pruebas 1–7 de `0005_forja_trainer_client.test.sql` |
+| 3 | `0004_forja_links.sql`: solicitud → aceptar/rechazar, notificaciones, cambio de entrenador, límite Free de 5 | Hecho | pruebas 8–13 y 19–23 |
+| 4 | `0005_forja_metrics.sql`: medidas y meta del cliente; con entrenador solo él escribe; el historial sigue al cliente | Hecho | pruebas 14–18, 20, 21 y 24; **24/24** en PGlite; la mutación de las reglas rompe 4 pruebas |
+| 5 | Asistente: paso de gimnasio y "¿Tienes entrenador?" | Hecho | `Onboarding.test.jsx` 7/7; recorrido en el navegador (vista previa) |
+| 6 | Pestaña Clientes (entrenador): notificaciones, solicitudes, cupo, ficha con selector de cliente, medidas, meta, historial | Hecho | `CoachFlow.test.jsx`; recorrido en el navegador sin errores de consola |
+| 7 | Pestaña Mi coach (cliente): cambiar gimnasio y entrenador, novedades, medidas en solo lectura | Hecho | `CoachFlow.test.jsx` |
+| 8 | Suite completa y build | Hecho | 3243/3244 con Node 22 (único rojo: `CoachChat.demo-failure`, heredado); build ok |
+| 9 | Ejecutar 0002–0005 en Supabase y sus dos pruebas | Pendiente, lo hace Carlos | resultado esperado: `13 de 13` y `24 de 24` |
+| 10 | Recorrido real con dos cuentas (entrenador y cliente) | Pendiente, con Carlos | — |
