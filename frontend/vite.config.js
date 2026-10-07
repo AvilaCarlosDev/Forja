@@ -73,5 +73,9 @@ export default defineConfig({
       '/gif': { target: media, changeOrigin: true }
     }
   },
-  build: { chunkSizeWarningLimit: 1500 }
+  build: { chunkSizeWarningLimit: 1500 },
+  // The suite must not depend on a developer's frontend/.env.local: Forja's preview mode and the
+  // image CDN are for running the app locally, and with them on the openGym tests (guest banner,
+  // default language, media prefetch, the demo Coach) see a different app than they test.
+  test: { env: { VITE_FORJA_AUTH_PREVIEW: '', VITE_IMG_BASE: '', VITE_GIF_BASE: '' } }
 })

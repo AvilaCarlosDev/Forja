@@ -1,7 +1,7 @@
 import React, { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { parseHTML } from 'linkedom'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import CoachChat from './CoachChat.jsx'
 
 // The demo Coach's failure state, end to end. Every other CoachChat test mocks lib/coach-api.js;
@@ -79,6 +79,11 @@ const state = () => ({
     log: [], snapshots: [], chat: [{ id: 'c1', role: 'user', kind: 'intake', at: 1 }], timings: []
   },
 })
+
+// The chat loads the demo Coach with a dynamic import, and `flush` only waits on microtasks: on a
+// busy machine the first load could take longer than that and the click looked ignored. Loading it
+// once up front leaves the import already settled, so the test no longer depends on disk speed.
+beforeAll(async () => { await import('../lib/coach-demo.js') })
 
 beforeEach(() => {
   vi.clearAllMocks()

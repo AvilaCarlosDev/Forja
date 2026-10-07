@@ -120,3 +120,11 @@ Alcance: el entrenador Pro arma la dieta de su cliente (comidas del día con ali
 | 5 | Funciones Pro bloqueadas (dieta, evolución, comparativa) abren «Mejora tu suscripción» o explican que depende del coach; botón de WhatsApp de planes | Hecho | `Diet.test.jsx`, `FreeLimit.test.jsx` |
 | 6 | `0011_forja_limite_free.sql`: al vencer Pro, el coach ve solo sus 5 clientes más antiguos (vínculos, perfiles, fotos, medidas, metas y dieta) | Hecho | `0011_forja_limite_free.test.sql` **9/9**; 0002–0010 siguen verdes; `FreeLimit.test.jsx` 2/2 |
 | 7 | Suite y build | Hecho | 3299/3308 (los 9 rojos de `.env.local`); build ok |
+
+## Suite en verde (2026-10-07)
+
+| # | Tarea | Estado | Evidencia |
+|---|---|---|---|
+| 1 | 8 rojos (SyncBanner, idioma por defecto, media-prefetch) los causaba `frontend/.env.local` (modo vista previa de Forja y CDN de imágenes): `vite.config.js` → `test.env` los anula durante las pruebas | Hecho | la suite ya no depende del `.env.local` de cada máquina |
+| 2 | `CoachChat.demo-failure` fallaba a veces: la importación dinámica del Coach demo no alcanzaba a resolverse en las 20 microtareas de `flush` con la máquina ocupada. La prueba ahora la carga antes (`beforeAll`) | Hecho | 3 corridas sueltas y 2 suites completas en verde |
+| 3 | Suite completa | Hecho | **3308/3308** con Node 22, dos veces; SQL 9/9 archivos OK; build ok |
