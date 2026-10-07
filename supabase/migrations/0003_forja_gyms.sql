@@ -79,6 +79,9 @@ insert into public.gyms (slug, name, branch, address, social_url, source_url, ve
    'https://www.instagram.com/goldstarsgym/', 'https://goldstarsgym.com/contacto/', true),
   ('gold-stars-las-virtudes', 'Gold Stars Gym', 'Las Virtudes', 'C.C. Las Virtudes',
    'https://www.instagram.com/goldstarsgym/', 'https://goldstarsgym.com/contacto/', true),
+  -- Tercera sede: no sale en su web; la confirmó Carlos y aparece como "Gold Stars Gym Cdv" en Yandex Maps.
+  ('gold-stars-ciudad-del-viento', 'Gold Stars Gym', 'Ciudad del Viento', 'C.C. Ciudad del Viento',
+   'https://www.instagram.com/goldstarsgym/', 'https://www.instagram.com/goldstarsgym/', true),
   ('altitude-punto-fijo', 'Altitude', null, 'C.C. Mediterráneo, Av. Ollarvides',
    'https://www.instagram.com/altitudepf/', 'https://www.instagram.com/altitudepf/', true),
   -- Cuenta oficial verificada; su bio no nombra la ciudad: Punto Fijo lo confirmó Carlos (vive allí).

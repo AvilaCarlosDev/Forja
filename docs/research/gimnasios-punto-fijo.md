@@ -8,6 +8,7 @@ Consultado: 2026-10-06. Regla: entra solo el gimnasio con **fuente primaria** (s
 |---|---|---|---|
 | Gold Stars Gym | Sambil Paraguaná, entrada Terrazas del Sambil | [goldstarsgym.com/contacto](https://goldstarsgym.com/contacto/) | Instagram oficial [@goldstarsgym](https://www.instagram.com/goldstarsgym/) |
 | Gold Stars Gym | C.C. Las Virtudes | [goldstarsgym.com/contacto](https://goldstarsgym.com/contacto/) | Misma marca, otra sede |
+| Gold Stars Gym | C.C. Ciudad del Viento | [@goldstarsgym](https://www.instagram.com/goldstarsgym/) | Su web lista solo 2 sedes; esta la **confirmó Carlos** y figura como "Gold Stars Gym Cdv" en [Yandex Maps](https://yandex.com/maps/114509/punto-fijo/category/sports_hall_gym/41430094175/) |
 | Altitude | C.C. Mediterráneo, Av. Ollarvides | [@altitudepf](https://www.instagram.com/altitudepf/) | La bio dice "Altitude Punto Fijo", CC Mediterráneo |
 | New Life Training Center | C.C. (sin dirección completa en la bio) | [@nltc_gym](https://www.instagram.com/nltc_gym/) | Gimnasio, box, MMA. La bio no nombra la ciudad: **Punto Fijo confirmado por Carlos** |
 
