@@ -1,7 +1,8 @@
-// Forja: genera las dos sesiones demo (frontend/public/sesion-trainer.js y sesion-cliente.js)
+// Forja: genera las dos sesiones demo (frontend/demo/sesion-trainer.json y sesion-cliente.json)
 // con datos completos para ver la app llena: rutinas, 12 semanas de entrenamientos y pesajes,
 // medidas que avanzan, meta, dieta, mensualidades y pagos. Todo vive en el localStorage del navegador
-// (modo vista previa); nada toca Supabase.
+// (modo vista previa); nada toca Supabase. Se cargan con `npm run dev` en /demo/cargar-sesiones.html;
+// frontend/demo/ no entra al build, así que nada de esto llega a producción.
 //
 // Las fechas salen relativas al día en que se corre (el estado de pago depende del mes en curso),
 // así que conviene volver a correrlo antes de una demo:
@@ -13,7 +14,7 @@ import { buildDemoState } from '../frontend/src/lib/demoSeed.js'
 import { foodById, itemFromFood } from '../frontend/src/lib/forja-diet.js'
 import { toLocalRoutine } from '../frontend/src/lib/forja-routines.js'
 
-const out = join(dirname(fileURLToPath(import.meta.url)), '..', 'frontend', 'public')
+const out = join(dirname(fileURLToPath(import.meta.url)), '..', 'frontend', 'demo')
 const TODAY = new Date(); TODAY.setHours(12, 0, 0, 0)
 const iso = d => d.toISOString().slice(0, 10)
 const daysAgo = n => { const d = new Date(TODAY); d.setDate(d.getDate() - n); return d }
@@ -133,18 +134,7 @@ function assignedFrom(st, clientId, trainerId, coachName, adopt = false) {
   return rows.map(({ from, ...r }) => r)
 }
 
-function file(title, store) {
-  const lines = [
-    `// ${title} — pega esto en la consola (DevTools) de http://localhost:5180`,
-    '// (borra la sesión preview actual de ese navegador)',
-    `// Generado con scripts/forja-demo-sessions.mjs el ${iso(TODAY)}.`,
-    'localStorage.clear();',
-    ...Object.entries(store).map(([k, v]) => `localStorage.setItem(${JSON.stringify(k)}, ${JSON.stringify(JSON.stringify(v))});`),
-    'location.reload();',
-    '',
-  ]
-  return lines.join('\n')
-}
+const file = store => JSON.stringify(store) + '\n'
 
 // ---- Coach Demo: entrenador Pro en Gold Stars Sambil con cuatro clientes -----------------------
 {
@@ -215,7 +205,7 @@ function file(title, store) {
     { id: id('n'), user_id: me, kind: 'link_request', link_id: links[3].id, actor_id: 'c-demo-4', actor_name: 'Pedro Demo', created_at: stamp(daysAgo(1)), read_at: null },
   ]
   const profile = { id: me, name: 'Coach Demo', sex: 'male', role: 'trainer', plan: 'pro', birth_date: '1990-05-10', remote: false, onboarded_at: stamp(daysAgo(90)) }
-  writeFileSync(join(out, 'sesion-trainer.js'), file('Coach Demo (entrenador Pro)', {
+  writeFileSync(join(out, 'sesion-trainer.json'), file({
     forja_preview_db_v1: { gyms: GYMS, people: [...TRAINERS, ...clients], trainerGyms: { ...trainerGyms, [me]: ['g-gs-sambil', 'g-gs-virtudes'] },
       links, notifications, metrics, goals, payments: pays, diets, routines, seededFor: me },
     gym_guest: 1,
@@ -248,7 +238,7 @@ function file(title, store) {
     { id: id('n'), user_id: me, kind: 'link_accepted', link_id: l.id, actor_id: coach, actor_name: 'Andrea Rojas (demo)', created_at: stamp(daysAgo(24 * 7)), read_at: stamp(daysAgo(24 * 7)) },
   ]
   const profile = { id: me, name: 'Lucía Demo', sex: 'female', role: 'client', plan: 'free', birth_date: '1996-03-14', gym_id: 'g-gs-sambil', remote: false, onboarded_at: stamp(daysAgo(86)) }
-  writeFileSync(join(out, 'sesion-cliente.js'), file('Lucía Demo (clienta)', {
+  writeFileSync(join(out, 'sesion-cliente.json'), file({
     forja_preview_db_v1: { gyms: GYMS, people: trainers, trainerGyms, links: [l], notifications, metrics, goals,
       payments: payments(me, coach, 30, 5, 0, ['Pago móvil Provincial', 'Pago móvil Provincial', 'Zelle']), diets, routines },
     gym_guest: 1,
@@ -258,4 +248,4 @@ function file(title, store) {
     forja_preview_profile_v1: profile,
   }))
 }
-console.log('listo: frontend/public/sesion-trainer.js y sesion-cliente.js')
+console.log('listo: frontend/demo/sesion-trainer.json y sesion-cliente.json')
