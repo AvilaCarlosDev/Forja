@@ -251,19 +251,39 @@ function Screens() {
   </>
 }
 
-// Fondo de entrar y crear cuenta: un bucle de 8 s de alguien entrenando (Mixkit, licencia libre
-// comercial; ver docs/design/login-video.md). Primero se ve la imagen fija; el video se pide
-// después de pintar el formulario, y no se pide si la persona prefiere menos movimiento o tiene
-// activado el ahorro de datos. Se pausa con la pestaña oculta.
-const BG = { poster: 'forja/login-poster.jpg', webm: 'forja/login.webm', mp4: 'forja/login.mp4' }
+// Fondo de entrar y crear cuenta: un bucle de 8 s de un entrenador con su cliente (Mixkit, licencia
+// libre comercial; ver docs/design/login-video.md). En pantallas anchas, un plano medio a sangre
+// completa; en el teléfono (vertical), un plano abierto 4:5 arriba que se funde con el formulario,
+// para que se vea a los dos de cuerpo entero y no un primer plano recortado.
+// Primero se ve la imagen fija; el video se pide después de pintar el formulario, y no se pide si
+// la persona prefiere menos movimiento o tiene el ahorro de datos. Se pausa con la pestaña oculta.
+const BG = {
+  wide: { poster: 'forja/login-poster.jpg', webm: 'forja/login.webm', mp4: 'forja/login.mp4' },
+  tall: { poster: 'forja/login-m-poster.jpg', webm: 'forja/login-m.webm', mp4: 'forja/login-m.mp4' },
+}
+const TALL = '(max-aspect-ratio: 4/5)'
 export function wantsVideo(w = globalThis) {
   if (w.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return false
   if (w.navigator?.connection?.saveData) return false
   return true
 }
 
+function useTall() {
+  const [tall, setTall] = useState(() => !!globalThis.matchMedia?.(TALL).matches)
+  useEffect(() => {
+    const mq = globalThis.matchMedia?.(TALL)
+    if (!mq) return
+    const on = () => setTall(mq.matches)
+    mq.addEventListener?.('change', on)
+    return () => mq.removeEventListener?.('change', on)
+  }, [])
+  return tall
+}
+
 function AuthBackdrop() {
   const video = useRef(null)
+  const tall = useTall()
+  const bg = tall ? BG.tall : BG.wide
   const [play, setPlay] = useState(false)
   useEffect(() => {
     if (!wantsVideo()) return
@@ -274,18 +294,22 @@ function AuthBackdrop() {
   useEffect(() => {
     const v = video.current
     if (!play || !v) return
-    const vis = () => { if (document.hidden) v.pause(); else v.play().catch(() => {}) }
+    // React no escribe el atributo `muted` en el HTML, y sin él Safari en iPhone no reproduce solo.
+    v.muted = true; v.defaultMuted = true; v.setAttribute('muted', ''); v.setAttribute('playsinline', '')
+    v.load()
+    const go = () => v.play().catch(() => {})
+    const vis = () => { if (document.hidden) v.pause(); else go() }
     document.addEventListener('visibilitychange', vis)
-    v.play().catch(() => {})
+    go()
     return () => document.removeEventListener('visibilitychange', vis)
-  }, [play])
-  return <div className="fj-backdrop" aria-hidden="true">
+  }, [play, tall])
+  return <div className={'fj-backdrop' + (tall ? ' tall' : '')} aria-hidden="true">
     {play
-      ? <video ref={video} muted loop playsInline autoPlay preload="auto" poster={BG.poster} disablePictureInPicture>
-        <source src={BG.webm} type="video/webm" />
-        <source src={BG.mp4} type="video/mp4" />
+      ? <video key={tall ? 'tall' : 'wide'} ref={video} muted loop playsInline autoPlay preload="auto" poster={bg.poster} disablePictureInPicture>
+        <source src={bg.webm} type="video/webm" />
+        <source src={bg.mp4} type="video/mp4" />
       </video>
-      : <img src={BG.poster} alt="" />}
+      : <img src={bg.poster} alt="" />}
   </div>
 }
 
