@@ -1,14 +1,15 @@
 // Forja: completar el perfil la primera vez que se entra. Foto, nombre, sexo y fecha de
 // nacimiento; si la persona es menor de 18, el consentimiento de su madre, padre o tutor; el
 // gimnasio (el entrenador puede elegir varios) y, si es cliente, su entrenador.
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useUI } from '../../store/useUI.js'
 import { useStore } from '../../store/useStore.js'
 import { Button } from '../../components/ui.jsx'
 import { BRAND } from '../../lib/brand.js'
+import Icon from '../../components/Icon.jsx'
 import { LEGAL } from '../../lib/forja-config.js'
 import {
-  ROLE_LABEL, getSession, useForjaProfile, loadProfile, updateProfile, saveGuardian, finishOnboarding,
+  ROLE_LABEL, getSession, useForjaProfile, loadProfile, updateProfile, saveGuardian, finishOnboarding, chooseRole,
 } from '../../lib/forja-session.js'
 import {
   MIN_AGE, RELATIONSHIPS, ageOn, needsGuardian, todayISO, validateDetails, validateGuardian, guardianBody,
@@ -118,6 +119,46 @@ function Guardian({ back, next }) {
   </form>
 }
 
+const ROLE_INFO = {
+  trainer: { icon: 'figureStrength', text: 'Entreno a otras personas y gestiono a mis clientes.' },
+  client: { icon: 'person', text: 'Entreno con un coach o por mi cuenta.' },
+}
+
+// Solo para cuentas creadas con Google/Apple, que no pasaron por el formulario de registro.
+function RoleStep({ next }) {
+  const [role, setRole] = useState('')
+  const [accept, setAccept] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+  const save = async () => {
+    setErr('')
+    if (!role) { setErr('Elige si eres Personal Trainer o Cliente'); return }
+    if (!accept) { setErr('Debes aceptar los términos y la política de privacidad'); return }
+    setBusy(true)
+    try { await chooseRole(role, true); next() }
+    catch (x) { setErr(x.message) }
+    finally { setBusy(false) }
+  }
+  return <div className="fj-form">
+    <div className="fj-field">
+      <div className="fj-legend" id="fj-ob-role">¿Cómo vas a usar {BRAND}?</div>
+      <div className="fj-roles" role="radiogroup" aria-labelledby="fj-ob-role">
+        {['trainer', 'client'].map(r => <button key={r} type="button" role="radio" aria-checked={role === r}
+          className={'fj-role' + (role === r ? ' on' : '')} onClick={() => { setRole(r); setErr('') }}>
+          <Icon name={ROLE_INFO[r].icon} /><b>{ROLE_LABEL[r]}</b><span>{ROLE_INFO[r].text}</span>
+        </button>)}
+      </div>
+    </div>
+    <label className="fj-check">
+      <input type="checkbox" checked={accept} onChange={e => { setAccept(e.target.checked); setErr('') }} />
+      <span>Acepto los <a href={LEGAL.terms} target="_blank" rel="noopener">términos de uso</a> y la <a href={LEGAL.privacy} target="_blank" rel="noopener">política de privacidad</a>.</span>
+    </label>
+    {role === 'trainer' && <div className="fj-note">Empiezas en el plan Free, con hasta 5 clientes. Tus clientes nunca pagan.</div>}
+    {err && <div className="fj-err" role="alert">{err}</div>}
+    <Button variant="primary" type="button" disabled={busy} onClick={save}>{busy ? 'Guardando…' : 'Continuar'}</Button>
+  </div>
+}
+
 function GymStep({ row, next }) {
   const trainer = row.role === 'trainer'
   const [gym, setGym] = useState(trainer ? [] : row.gym_id || null)
@@ -163,11 +204,16 @@ function TrainerStep({ row, next }) {
   </div>
 }
 
-const STEP_TITLE = { details: 'Tus datos', guardian: 'Permiso de tu tutor', gym: 'Tu gimnasio', trainer: 'Tu entrenador' }
+const STEP_TITLE = { role: 'Tu tipo de cuenta', details: 'Tus datos', guardian: 'Permiso de tu tutor', gym: 'Tu gimnasio', trainer: 'Tu entrenador' }
 
 export default function ForjaOnboarding() {
   const { status, row, error } = useForjaProfile()
-  const [step, setStep] = useState('details')
+  // Las cuentas de Google/Apple llegan sin rol elegido (role_chosen = false).
+  const [step, setStep] = useState(() => (row && row.role_chosen === false ? 'role' : 'details'))
+  const hadRole = useRef(false)
+  if (step === 'role') hadRole.current = true
+  // El perfil llega después del primer render: si es una cuenta de Google/Apple, empieza por el rol.
+  useEffect(() => { if (row?.role_chosen === false) setStep(s => (s === 'details' ? 'role' : s)) }, [row?.role_chosen])
   const [minor, setMinor] = useState(false)
   const [err, setErr] = useState('')
   if (status === 'error') return <div className="narrow fj-auth">
@@ -180,15 +226,17 @@ export default function ForjaOnboarding() {
     try { const r = await finishOnboarding(); toast('¡Listo, ' + (r?.name || row.name) + '! Tu perfil está completo') }
     catch (x) { setErr(x.message) }
   }
-  const steps = ['details', ...(minor ? ['guardian'] : []), 'gym', ...(row.role === 'client' ? ['trainer'] : [])]
+  const needsRole = row.role_chosen === false || hadRole.current
+  const steps = [...(needsRole ? ['role'] : []), 'details', ...(minor ? ['guardian'] : []), 'gym', ...(row.role === 'client' ? ['trainer'] : [])]
   const at = steps.indexOf(step) + 1
   const go = cur => { const n = steps[steps.indexOf(cur) + 1]; if (n) setStep(n); else finish() }
   return <div className="narrow fj-auth fj-onboarding">
     <div className="fj-brand">
       <h1>Completa tu perfil</h1>
-      <div className="muted">{ROLE_LABEL[row.role] || 'Cliente'} · paso {at} de {steps.length} · {STEP_TITLE[step]}</div>
+      <div className="muted">{step === 'role' ? 'Bienvenido' : ROLE_LABEL[row.role] || 'Cliente'} · paso {at} de {steps.length} · {STEP_TITLE[step]}</div>
     </div>
     <Steps at={at} total={steps.length} />
+    {step === 'role' && <RoleStep next={() => setStep('details')} />}
     {step === 'details' && <Details row={row} next={isMinor => { setMinor(isMinor); setStep(isMinor ? 'guardian' : 'gym') }} />}
     {step === 'guardian' && <Guardian back={() => setStep('details')} next={() => setStep('gym')} />}
     {step === 'gym' && <GymStep row={row} next={() => go('gym')} />}

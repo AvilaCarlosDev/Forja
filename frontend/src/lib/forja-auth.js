@@ -45,12 +45,18 @@ export function parseAuthHash(hash) {
   return { access_token, refresh_token: p.get('refresh_token') || '', expires_in: Number(p.get('expires_in')) || 3600, type: p.get('type') || '' }
 }
 
+export const OAUTH_PROVIDERS = ['google', 'apple']
+
+// Proveedores activos según /auth/v1/settings (external.google, external.apple…).
+export const enabledProviders = settings => OAUTH_PROVIDERS.filter(p => settings?.external?.[p] === true)
+
 export function profileFromUser(u) {
   const m = u?.user_metadata || {}
   const email = u?.email || ''
   return {
     id: u?.id || '', email,
-    name: String(m.name || '').trim() || email.split('@')[0],
+    // Google y Apple mandan el nombre como full_name (o name).
+    name: String(m.name || m.full_name || '').trim() || email.split('@')[0],
     sex: SEXES.includes(m.sex) ? m.sex : null,
     role: ROLES.includes(m.role) ? m.role : 'client',
   }
@@ -116,6 +122,12 @@ export function createAuth({ url, key, fetch: f = globalThis.fetch?.bind(globalT
     saveSession(s); return s
   }
   return {
+    // Entrar o crear cuenta con Google/Apple: se va a esta dirección y se vuelve con los tokens
+    // en el fragmento (#access_token=…), que ya lee parseAuthHash.
+    oauthUrl: (provider, redirectTo) => base + '/authorize?provider=' + encodeURIComponent(provider) + (redirectTo ? '&redirect_to=' + encodeURIComponent(redirectTo) : ''),
+    async providers() {
+      try { return enabledProviders(await call('/settings', { method: 'GET' })) } catch { return [] }
+    },
     async signUp(form, redirectTo) {
       const d = await call('/signup' + redirect(redirectTo), { body: signupBody(form) })
       // Con confirmación de correo activa GoTrue devuelve el usuario sin tokens.

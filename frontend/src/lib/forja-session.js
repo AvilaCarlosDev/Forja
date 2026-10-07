@@ -72,6 +72,13 @@ export async function saveGuardian(body) {
   return db.insert('guardian_consents', body, { upsert: true })
 }
 
+// Cuentas creadas con Google/Apple: eligen rol y aceptan los términos en el asistente.
+export async function chooseRole(role, accept) {
+  if (current?.preview || FORJA_AUTH_PREVIEW) return updateProfile({ role, role_chosen: true })
+  const row = await db.rpc('forja_choose_role', { p_role: role, p_accept: accept })
+  setProfile({ row }); return row
+}
+
 export async function finishOnboarding() {
   if (current?.preview || FORJA_AUTH_PREVIEW) return updateProfile({ onboarded_at: new Date().toISOString() })
   const row = await db.rpc('forja_finish_onboarding')

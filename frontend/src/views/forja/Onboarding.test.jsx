@@ -149,3 +149,32 @@ describe('Forja onboarding — trainer', () => {
     expect(host.textContent).not.toMatch('¿Tienes entrenador personal?')
   })
 })
+
+describe('Forja onboarding — cuenta creada con Google', () => {
+  beforeEach(async () => {
+    localStorage.clear(); mocks.toasts.length = 0
+    localStorage.setItem('forja_preview_profile_v1', JSON.stringify({ id: 'preview', name: 'Ana Google', sex: null, role: 'client', role_chosen: false, plan: 'free' }))
+    await act(async () => {
+      session.setSession({ access_token: 'preview', preview: true, profile: { id: 'preview', email: 'ana@gmail.com', name: 'Ana Google', sex: null, role: 'client' } })
+      await session.loadProfile()
+    })
+    host = document.createElement('div'); document.body.appendChild(host)
+    root = createRoot(host)
+    await act(async () => { root.render(<Onboarding />) })
+  })
+
+  it('asks for the account type and the terms first, then goes on as a trainer', async () => {
+    expect(host.textContent).toMatch('¿Cómo vas a usar Forja?')
+    expect(host.textContent).toMatch('paso 1 de 4') // rol, datos, gimnasio y, si es cliente, entrenador
+    await click(byText('button', 'Continuar'))
+    expect(host.textContent).toMatch('Elige si eres Personal Trainer o Cliente')
+    await click([...host.querySelectorAll('button')].find(b => b.textContent.includes('Personal Trainer')))
+    await click(byText('button', 'Continuar'))
+    expect(host.textContent).toMatch('Debes aceptar los términos')
+    await click(host.querySelector('.fj-check input'))
+    await click(byText('button', 'Continuar'))
+    expect(row()).toMatchObject({ role: 'trainer', role_chosen: true })
+    expect(host.textContent).toMatch('Tus datos')
+    expect(host.textContent).toMatch('paso 2 de 3')
+  })
+})

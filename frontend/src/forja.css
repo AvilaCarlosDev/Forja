@@ -136,3 +136,13 @@
 .fj-steps-list li{display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.45}
 .fj-step-n{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--acc);color:var(--on-acc);font-weight:700;font-size:14px}
 .fj-glyph{width:20px;height:20px;vertical-align:-4px;fill:none;stroke:var(--acc);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* Entrar con Google / Apple (colores y logos según las guías de cada marca) */
+.fj-oauth{display:flex;flex-direction:column;gap:10px}
+.fj-oauth-btn{display:flex;align-items:center;justify-content:center;gap:10px;min-height:48px;border-radius:12px;
+  font-size:16px;font-weight:600;text-decoration:none;border:1px solid transparent}
+.fj-oauth-btn svg{width:20px;height:20px;flex:none}
+.fj-oauth-btn.google{background:#fff;color:#1f1f1f;border-color:#dadce0}
+.fj-oauth-btn.apple{background:#000;color:#fff;border-color:#3a3a3c}
+.fj-oauth-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.fj-or{display:flex;align-items:center;gap:10px;color:var(--label-2);font-size:13px}
+.fj-or::before,.fj-or::after{content:'';flex:1;height:1px;background:var(--sep)}

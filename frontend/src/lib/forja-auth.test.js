@@ -153,3 +153,26 @@ describe('createAuth', () => {
     await expect(auth.signIn('ana@example.com', 'secreto123')).rejects.toThrow(/conexión/i)
   })
 })
+
+describe('Google / Apple', () => {
+  it('lists only the providers Supabase has switched on', async () => {
+    const { enabledProviders } = await import('./forja-auth.js')
+    expect(enabledProviders({ external: { google: true, apple: false, email: true } })).toEqual(['google'])
+    expect(enabledProviders({ external: { google: true, apple: true } })).toEqual(['google', 'apple'])
+    expect(enabledProviders(null)).toEqual([])
+  })
+  it('builds the authorize URL with the way back', () => {
+    const a = createAuth({ url: 'https://x.supabase.co/', key: 'k', fetch: async () => ({}) })
+    expect(a.oauthUrl('google', 'https://forja-trainer.vercel.app/'))
+      .toBe('https://x.supabase.co/auth/v1/authorize?provider=google&redirect_to=https%3A%2F%2Fforja-trainer.vercel.app%2F')
+  })
+  it('asks Supabase which providers are on, and shows none if it cannot tell', async () => {
+    const ok = createAuth({ url: 'https://x.supabase.co', key: 'k', fetch: async () => ({ ok: true, json: async () => ({ external: { google: true } }) }) })
+    expect(await ok.providers()).toEqual(['google'])
+    const down = createAuth({ url: 'https://x.supabase.co', key: 'k', fetch: async () => { throw new TypeError('offline') } })
+    expect(await down.providers()).toEqual([])
+  })
+  it('takes the name Google sends as full_name', () => {
+    expect(profileFromUser({ id: 'u', email: 'ana@gmail.com', user_metadata: { full_name: 'Ana Pérez' } }).name).toBe('Ana Pérez')
+  })
+})
