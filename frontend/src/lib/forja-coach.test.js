@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   gymLabel, normalizeSocial, validateGymSuggestion, filterGyms, effectivePlan, clientCanEditMetrics,
   linkSummary, notificationText, metricRow, bmi, latestValues, progress, FREE_CLIENT_LIMIT,
-  monthKey, prevMonthKey, monthName, paymentStatus, financeSummary, metricSeries, chartableMetrics,
+  monthKey, prevMonthKey, monthName, paymentStatus, financeSummary, metricSeries, chartableMetrics, clientsAtGym, gymOptions,
 } from './forja-coach.js'
 
 const gyms = [
@@ -186,5 +186,25 @@ describe('forja-coach — evolución de medidas', () => {
   it('only offers metrics with at least two readings, and never the height', () => {
     const keys = chartableMetrics([...rows, { measured_on: '2026-06-01', height_cm: 165, measurements: {} }, { measured_on: '2026-09-02', height_cm: 165, measurements: {} }]).map(f => f.key)
     expect(keys).toEqual(['weight_kg', 'waist'])
+  })
+})
+
+describe('forja-coach — clientes por gimnasio', () => {
+  const links = [
+    { id: 1, client: { gym_id: 'g-a' } }, { id: 2, client: { gym_id: 'g-b' } },
+    { id: 3, client: { gym_id: 'g-a' } }, { id: 4, client: { gym_id: null, remote: true } },
+  ]
+  const gyms = [{ id: 'g-a', name: 'Gold Stars Gym', branch: 'Sambil' }, { id: 'g-b', name: 'Altitude', branch: null }]
+
+  it('shows only the clients of the gym the trainer is at', () => {
+    expect(clientsAtGym(links, 'g-a').map(l => l.id)).toEqual([1, 3])
+    expect(clientsAtGym(links, 'remote').map(l => l.id)).toEqual([4])
+    expect(clientsAtGym(links, 'all')).toHaveLength(4)
+    expect(clientsAtGym(links, null)).toHaveLength(4)
+  })
+
+  it('offers each gym with its count, remote clients and everyone', () => {
+    expect(gymOptions(gyms, links).map(o => [o.value, o.count])).toEqual([['g-a', 2], ['g-b', 1], ['remote', 1], ['all', 4]])
+    expect(gymOptions(gyms, links.slice(0, 3)).map(o => o.value)).toEqual(['g-a', 'g-b', 'all'])
   })
 })

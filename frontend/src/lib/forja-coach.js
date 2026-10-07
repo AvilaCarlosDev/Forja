@@ -69,6 +69,26 @@ export const NOTIFICATION_TEXT = {
 }
 export const notificationText = n => (NOTIFICATION_TEXT[n?.kind] || (() => 'Novedad en tu cuenta'))(n || {})
 
+// ---- Clientes por gimnasio --------------------------------------------------------------------
+
+// El entrenador trabaja en un gimnasio a la vez: ve los clientes activos de ese gimnasio.
+// 'remote' = clientes a distancia o sin gimnasio; 'all' = todos.
+export function clientsAtGym(links = [], gymId) {
+  if (!gymId || gymId === 'all') return links
+  if (gymId === 'remote') return links.filter(l => !l.client?.gym_id)
+  return links.filter(l => l.client?.gym_id === gymId)
+}
+
+// Opciones del selector «Estoy en…»: sus gimnasios (con cuántos clientes tiene en cada uno),
+// «A distancia» si tiene clientes sin gimnasio, y «Todos».
+export function gymOptions(trainerGyms = [], links = []) {
+  const opts = trainerGyms.map(g => ({ value: g.id, label: gymLabel(g), count: clientsAtGym(links, g.id).length }))
+  const remote = clientsAtGym(links, 'remote').length
+  if (remote) opts.push({ value: 'remote', label: 'A distancia', count: remote })
+  opts.push({ value: 'all', label: 'Todos', count: links.length })
+  return opts
+}
+
 // ---- Medidas ---------------------------------------------------------------------------------
 
 export const METRIC_FIELDS = [

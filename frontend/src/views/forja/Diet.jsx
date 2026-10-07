@@ -14,6 +14,13 @@ import { Field, Panel, Choice, Loading, ErrorNote, useLoad } from './parts.jsx'
 const toast = m => useUI.getState().toast(m)
 const fmt = v => String(Math.round(Number(v || 0) * 10) / 10).replace('.', ',')
 const SHORT = { kcal: 'kcal', protein: 'P', carbs: 'C', fat: 'G' }
+const iconOf = it => foodById(it.food)?.icon || '🍽️'
+// Un alimento de la dieta: ícono, nombre, porción y macros.
+const FoodLine = ({ it, children }) => <li className="fj-food">
+  <span className="fj-food-icon" aria-hidden="true">{iconOf(it)}</span>
+  <span className="fj-food-m"><span>{it.name} <span className="dim">· {fmt(it.grams)} g {unitsText(it) && `(${unitsText(it)})`}</span></span>
+    <small className="dim">{macroLine(it)}</small>{children}</span>
+</li>
 const macroLine = t => `${fmt(t.kcal)} kcal · P ${fmt(t.protein)} · C ${fmt(t.carbs)} · G ${fmt(t.fat)}`
 
 // Totales del día contra el objetivo, con una barra por macro.
@@ -36,10 +43,8 @@ function MealView({ meal }) {
   return <li className="fj-meal">
     <div className="fj-meal-head"><b>{meal.name}</b>{meal.time && <span className="dim small">{meal.time}</span>}
       <span className="dim small fj-meal-kcal">{fmt(t.kcal)} kcal</span></div>
-    {meal.items.length ? <ul className="fj-foods">{meal.items.map((it, i) => <li key={i}>
-      <span>{it.name} <span className="dim">· {fmt(it.grams)} g {unitsText(it) && `(${unitsText(it)})`}</span></span>
-      <small className="dim">{macroLine(it)}</small>
-    </li>)}</ul> : <p className="dim small">Sin alimentos.</p>}
+    {meal.items.length ? <ul className="fj-foods">{meal.items.map((it, i) => <FoodLine key={i} it={it} />)}</ul>
+      : <p className="dim small">Sin alimentos.</p>}
   </li>
 }
 
@@ -170,11 +175,9 @@ function DietEditor({ clientId, clientName, diet, otherClients = [], onSaved, on
           <input className="input" type="time" aria-label={`Hora de ${meal.name || 'la comida'}`} value={meal.time || ''} onChange={e => editMeal(i, { time: e.target.value })} />
           <button type="button" className="fj-icon-btn small" aria-label={`Quitar ${meal.name || 'comida'}`} onClick={() => setMeals(ms => ms.filter((_, j) => j !== i))}>×</button>
         </div>
-        <ul className="fj-foods">{meal.items.map((it, k) => <li key={k}>
-          <span>{it.name} <span className="dim">· {fmt(it.grams)} g {unitsText(it) && `(${unitsText(it)})`}</span></span>
-          <small className="dim">{macroLine(it)}</small>
+        <ul className="fj-foods">{meal.items.map((it, k) => <FoodLine key={k} it={it}>
           <button type="button" className="fj-link danger" aria-label={`Quitar ${it.name}`} onClick={() => editMeal(i, { items: meal.items.filter((_, j) => j !== k) })}>Quitar</button>
-        </li>)}</ul>
+        </FoodLine>)}</ul>
         {adding === i
           ? <FoodAdder onCancel={() => setAdding(null)} onAdd={it => { editMeal(i, { items: [...meal.items, it] }); setAdding(null) }} />
           : meal.items.length < LIMITS.items && <button type="button" className="fj-link" onClick={() => setAdding(i)}>+ Agregar alimento</button>}
