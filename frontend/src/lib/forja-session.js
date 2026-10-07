@@ -52,7 +52,9 @@ export async function loadProfile() {
   }
   setProfile({ status: 'loading', error: '' })
   try {
-    const row = await db.one('profiles', { id: s.profile.id })
+    // La fila propia completa (con role_chosen y terms_accepted_at) llega por forja_me(): de
+    // profiles solo se pueden leer las columnas públicas (0013).
+    const row = await db.rpc('forja_me')
     setProfile({ status: 'ready', row, error: '' }); return row
   } catch (x) { setProfile({ status: 'error', error: x.message }); return null }
 }
@@ -63,7 +65,9 @@ export async function updateProfile(patch) {
   if (s?.preview || FORJA_AUTH_PREVIEW) {
     const row = { ...profile.row, ...patch }; savePreviewRow(row); setProfile({ row }); return row
   }
-  const row = await db.update('profiles', { id: s.profile.id }, patch)
+  const done = await db.update('profiles', { id: s.profile.id }, patch, { select: 'id' })
+  if (!done) throw new Error('No se pudo guardar tu perfil.')
+  const row = await db.rpc('forja_me')
   setProfile({ row }); return row
 }
 

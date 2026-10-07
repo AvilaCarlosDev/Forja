@@ -51,12 +51,26 @@ const PROVIDER = {
   apple: { label: 'Continuar con Apple', logo: <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.37 12.6c-.02-2.2 1.8-3.26 1.88-3.31-1.02-1.5-2.62-1.7-3.19-1.72-1.36-.14-2.65.8-3.34.8-.69 0-1.75-.78-2.88-.76-1.48.02-2.85.86-3.61 2.19-1.54 2.67-.39 6.62 1.11 8.79.73 1.06 1.61 2.25 2.75 2.21 1.1-.04 1.52-.71 2.85-.71 1.33 0 1.71.71 2.88.69 1.19-.02 1.94-1.08 2.67-2.15.84-1.23 1.19-2.42 1.21-2.48-.03-.01-2.32-.89-2.33-3.55zM14.18 6.12c.61-.74 1.02-1.76.91-2.78-.88.04-1.94.59-2.57 1.32-.56.65-1.06 1.69-.93 2.69.98.08 1.98-.5 2.59-1.23z"/></svg> },
 }
 
-function OAuthButtons() {
+// La casilla de términos, en «Entrar» y en «Crear cuenta». Es obligatoria en las dos, también
+// para Google/Apple: sin marcarla, esos botones avisan y llevan a la casilla en vez de salir.
+const ACCEPT_MSG = 'Debes aceptar los términos y la política de privacidad'
+function Accept({ id, checked, onChange, error }) {
+  return <>
+    <label className="fj-check">
+      <input id={id} type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} aria-invalid={!!error} />
+      <span>Acepto los <a href={LEGAL.terms} target="_blank" rel="noopener">términos de uso</a> y la <a href={LEGAL.privacy} target="_blank" rel="noopener">política de privacidad</a>.</span>
+    </label>
+    {error && <div className="fj-err" role="alert">{error}</div>}
+  </>
+}
+
+function OAuthButtons({ accepted, onBlocked }) {
   const [list, setList] = useState([])
   useEffect(() => { let live = true; auth?.providers().then(p => { if (live) setList(p) }); return () => { live = false } }, [])
   if (!list.length) return null
   return <div className="fj-oauth">
-    {list.map(p => <a key={p} className={'fj-oauth-btn ' + p} href={auth.oauthUrl(p, here())}>
+    {list.map(p => <a key={p} className={'fj-oauth-btn ' + p} href={auth.oauthUrl(p, here())}
+      onClick={e => { if (!accepted) { e.preventDefault(); onBlocked() } }}>
       {PROVIDER[p].logo}<span>{PROVIDER[p].label}</span>
     </a>)}
     <div className="fj-or"><span>o con tu correo</span></div>
@@ -68,9 +82,13 @@ function Login({ go }) {
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
+  const [accept, setAccept] = useState(false)
+  const [acceptErr, setAcceptErr] = useState('')
+  const blocked = () => { setAcceptErr(ACCEPT_MSG); document.getElementById('fj-login-accept')?.focus() }
   const submit = async e => {
     e.preventDefault(); setErr('')
     if (!email.trim() || !password) { setErr('Escribe tu correo y tu contraseña'); return }
+    if (!accept) { blocked(); return }
     if (FORJA_AUTH_PREVIEW) { setErr('Vista previa: aquí no hay cuentas guardadas. Crea una de prueba con "Crear cuenta".'); return }
     setBusy(true)
     try { const s = await auth.signIn(email, password); syncSession(); enter(s.profile); toast('Hola de nuevo, ' + s.profile.name) }
@@ -80,7 +98,7 @@ function Login({ go }) {
   return <div className="narrow fj-auth">
     <Brand sub="Forja tu cuerpo." />
     <PreviewNote />
-    <OAuthButtons />
+    <OAuthButtons accepted={accept} onBlocked={blocked} />
     <form className="fj-form" onSubmit={submit} noValidate>
       <Field id="fj-login-email" label="Correo">
         <input id="fj-login-email" className="input" type="email" name="email" autoComplete="email" inputMode="email" value={email} onChange={e => setEmail(e.target.value)} />
@@ -88,6 +106,7 @@ function Login({ go }) {
       <Field id="fj-login-password" label="Contraseña">
         <input id="fj-login-password" className="input" type="password" name="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} />
       </Field>
+      <Accept id="fj-login-accept" checked={accept} onChange={v => { setAccept(v); setAcceptErr('') }} error={acceptErr} />
       {err && <div className="fj-err" role="alert">{err}</div>}
       <Button variant="primary" type="submit" disabled={busy}>{busy ? 'Entrando…' : 'Entrar'}</Button>
     </form>
@@ -130,7 +149,7 @@ function Register({ go, onSent }) {
   return <div className="narrow fj-auth">
     <Brand sub="Crea tu cuenta" />
     <PreviewNote />
-    <OAuthButtons />
+    <OAuthButtons accepted={f.accept} onBlocked={() => { setErrors(p => ({ ...p, accept: ACCEPT_MSG })); document.getElementById('fj-reg-accept')?.focus() }} />
     <form className="fj-form" onSubmit={submit} noValidate>
       <div className="fj-field">
         <div className="fj-legend" id="fj-reg-role-l">¿Cómo vas a usar {BRAND}?</div>
@@ -162,11 +181,7 @@ function Register({ go, onSent }) {
         <div className="dim small">Se usa para dibujar el mapa muscular y las referencias de progreso.</div>
         {errors.sex && <div className="fj-err" role="alert">{errors.sex}</div>}
       </div>
-      <label className="fj-check">
-        <input id="fj-reg-accept" type="checkbox" checked={f.accept} onChange={e => set('accept', e.target.checked)} />
-        <span>Acepto los <a href={LEGAL.terms} target="_blank" rel="noopener">términos de uso</a> y la <a href={LEGAL.privacy} target="_blank" rel="noopener">política de privacidad</a>.</span>
-      </label>
-      {errors.accept && <div className="fj-err" role="alert">{errors.accept}</div>}
+      <Accept id="fj-reg-accept" checked={f.accept} onChange={v => set('accept', v)} error={errors.accept} />
       {f.role === 'trainer' && <div className="fj-note">Empiezas en el plan Free, con hasta 5 clientes. El plan Pro es solo para entrenadores; tus clientes nunca pagan.</div>}
       {err && <div className="fj-err" role="alert">{err}</div>}
       <Button variant="primary" type="submit" disabled={busy}>{busy ? 'Creando cuenta…' : 'Crear cuenta'}</Button>

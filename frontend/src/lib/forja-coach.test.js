@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   gymLabel, normalizeSocial, validateGymSuggestion, filterGyms, effectivePlan, clientCanEditMetrics,
   linkSummary, notificationText, metricRow, bmi, latestValues, progress, FREE_CLIENT_LIMIT,
-  monthKey, prevMonthKey, monthName, paymentStatus, financeSummary,
+  monthKey, prevMonthKey, monthName, paymentStatus, financeSummary, metricSeries, chartableMetrics, clientsAtGym, gymOptions,
 } from './forja-coach.js'
 
 const gyms = [
@@ -165,5 +165,54 @@ describe('finanzas', () => {
     expect(s.rows[2].status).toBe('pendiente')
     expect(s.due).toBe(25) // el de30 ya pagó; sin monto no suma
     expect(s.vencidos).toBe(1)
+  })
+})
+
+describe('forja-coach — evolución de medidas', () => {
+  const rows = [
+    { measured_on: '2026-09-01', weight_kg: 70, measurements: { waist: 80 }, created_at: '2026-09-01T10:00:00Z' },
+    { measured_on: '2026-07-01', weight_kg: 74, body_fat_pct: 30, measurements: {}, created_at: '2026-07-01T10:00:00Z' },
+    { measured_on: '2026-09-01', weight_kg: 69.5, measurements: {}, created_at: '2026-09-01T18:00:00Z' },
+    { measured_on: '2026-08-01', weight_kg: 72, measurements: { waist: 83 }, created_at: '2026-08-01T10:00:00Z' },
+  ]
+
+  it('orders the points by date and keeps the last reading of a day', () => {
+    expect(metricSeries(rows, 'weight_kg').map(p => [p.d, p.y])).toEqual([['2026-07-01', 74], ['2026-08-01', 72], ['2026-09-01', 69.5]])
+    expect(metricSeries(rows, 'waist').map(p => p.y)).toEqual([83, 80])
+    expect(metricSeries(rows, 'body_fat_pct')).toHaveLength(1)
+    expect(metricSeries([], 'weight_kg')).toEqual([])
+  })
+
+  it('only offers metrics with at least two readings, and never the height', () => {
+    const keys = chartableMetrics([...rows, { measured_on: '2026-06-01', height_cm: 165, measurements: {} }, { measured_on: '2026-09-02', height_cm: 165, measurements: {} }]).map(f => f.key)
+    expect(keys).toEqual(['weight_kg', 'waist'])
+  })
+})
+
+describe('forja-coach — clientes por gimnasio', () => {
+  const links = [
+    { id: 1, client: { gym_id: 'g-a' } }, { id: 2, client: { gym_id: 'g-b' } },
+    { id: 3, client: { gym_id: 'g-a' } }, { id: 4, client: { gym_id: null, remote: true } },
+  ]
+  const gyms = [{ id: 'g-a', name: 'Gold Stars Gym', branch: 'Sambil' }, { id: 'g-b', name: 'Altitude', branch: null }]
+
+  it('shows only the clients of the gym the trainer is at', () => {
+    expect(clientsAtGym(links, 'g-a').map(l => l.id)).toEqual([1, 3])
+    expect(clientsAtGym(links, 'remote').map(l => l.id)).toEqual([4])
+    expect(clientsAtGym(links, 'all')).toHaveLength(4)
+    expect(clientsAtGym(links, null)).toHaveLength(4)
+  })
+
+  it('offers each gym with its count, remote clients and everyone', () => {
+    expect(gymOptions(gyms, links).map(o => [o.value, o.count])).toEqual([['g-a', 2], ['g-b', 1], ['remote', 1], ['all', 4]])
+    expect(gymOptions(gyms, links.slice(0, 3)).map(o => o.value)).toEqual(['g-a', 'g-b', 'all'])
+  })
+})
+
+describe('forja-coach — avisos del coach al cliente', () => {
+  it('names the coach in what was sent', () => {
+    expect(notificationText({ kind: 'diet_updated', actor_name: 'Andrea' })).toBe('Andrea te envió tu dieta')
+    expect(notificationText({ kind: 'metrics_added', actor_name: 'Andrea' })).toBe('Andrea cargó tus nuevas medidas')
+    expect(notificationText({ kind: 'routine_assigned' })).toBe('Tu coach te asignó una rutina')
   })
 })

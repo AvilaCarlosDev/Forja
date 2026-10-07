@@ -12,7 +12,7 @@ import {
   ROLE_LABEL, getSession, useForjaProfile, loadProfile, updateProfile, saveGuardian, finishOnboarding, chooseRole,
 } from '../../lib/forja-session.js'
 import {
-  MIN_AGE, RELATIONSHIPS, SEX_OPTIONS, ageOn, needsGuardian, todayISO, validateDetails, validateGuardian, guardianBody,
+  MIN_AGE, RELATIONSHIPS, SEX_OPTIONS, ageOn, needsGuardian, todayISO, validateDetails, validateBody, validateGuardian, guardianBody,
 } from '../../lib/forja-profile.js'
 import { AvatarPicker } from './Avatar.jsx'
 import GymPicker from './GymPicker.jsx'
@@ -36,7 +36,8 @@ function focusFirst(prefix, errors) {
 
 function Details({ row, next }) {
   const today = todayISO()
-  const [f, setF] = useState({ name: row.name || '', sex: row.sex || '', birth_date: row.birth_date || '' })
+  const lastBw = useStore.getState().S.bodyweight?.at(-1)
+  const [f, setF] = useState({ name: row.name || '', sex: row.sex || '', birth_date: row.birth_date || '', weight_kg: lastBw ? String(lastBw.w) : '', height_cm: '' })
   const [errors, setErrors] = useState({})
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
@@ -44,13 +45,26 @@ function Details({ row, next }) {
   const age = ageOn(f.birth_date, today)
   const submit = async e => {
     e.preventDefault(); setErr('')
-    const bad = validateDetails(f, today)
+    const body = validateBody(f)
+    const bad = { ...validateDetails(f, today), ...body.errors }
     setErrors(bad)
     if (Object.keys(bad).length) { focusFirst('fj-ob-', bad); return }
     setBusy(true)
     try {
       await updateProfile({ name: f.name.trim(), sex: f.sex, birth_date: f.birth_date })
-      if (f.sex) useStore.getState().update(s => { s.body = f.sex })
+      // El peso del perfil es el primer pesaje: la app ya lo tiene y no lo vuelve a pedir antes
+      // de cada entrenamiento (en Forja, el peso lo lleva el perfil y, con coach, sus medidas).
+      useStore.getState().update(s => {
+        if (f.sex) s.body = f.sex
+        s.weighIn = false
+        s.bodyweight = (s.bodyweight || []).filter(b => b.d !== today)
+        s.bodyweight.push({ d: today, w: body.weight_kg, t: Date.now() })
+      })
+      if (row.role === 'client') {
+        // Punto de partida de sus medidas (aún no tiene entrenador: la carga él mismo).
+        try { await api().addMetric({ client_id: row.id, measured_on: today, weight_kg: body.weight_kg, height_cm: body.height_cm, measurements: {} }) }
+        catch { /* las medidas se pueden cargar después; el perfil sigue */ }
+      }
       next(needsGuardian(f.birth_date, today))
     } catch (x) { setErr(x.message) }
     finally { setBusy(false) }
@@ -69,6 +83,14 @@ function Details({ row, next }) {
       hint={age != null && age >= MIN_AGE && age < 18 ? 'Como eres menor de 18, en el siguiente paso te pediremos el permiso de tu madre, padre o tutor.' : 'Se usa para tus referencias de progreso. No se muestra a nadie.'}>
       <input id="fj-ob-birth_date" className="input" type="date" max={today} autoComplete="bday" value={f.birth_date} onChange={e => set('birth_date', e.target.value)} />
     </Field>
+    <div className="fj-grid2">
+      <Field id="fj-ob-weight_kg" label="Peso (kg)" error={errors.weight_kg}>
+        <input id="fj-ob-weight_kg" className="input" inputMode="decimal" value={f.weight_kg} onChange={e => set('weight_kg', e.target.value)} />
+      </Field>
+      <Field id="fj-ob-height_cm" label="Talla (cm, opcional)" error={errors.height_cm}>
+        <input id="fj-ob-height_cm" className="input" inputMode="numeric" value={f.height_cm} onChange={e => set('height_cm', e.target.value)} />
+      </Field>
+    </div>
     {err && <div className="fj-err" role="alert">{err}</div>}
     <Button variant="primary" type="submit" disabled={busy}>{busy ? 'Guardando…' : 'Continuar'}</Button>
   </form>

@@ -6,17 +6,24 @@ import { Button } from '../../components/ui.jsx'
 import Icon from '../../components/Icon.jsx'
 import { api } from '../../lib/forja-api.js'
 import { useForjaProfile } from '../../lib/forja-session.js'
-import { effectivePlan, FREE_CLIENT_LIMIT, notificationText, gymLabel } from '../../lib/forja-coach.js'
+import { effectivePlan, FREE_CLIENT_LIMIT, notificationText, gymLabel, clientsAtGym, gymOptions } from '../../lib/forja-coach.js'
 import { ageOn } from '../../lib/forja-profile.js'
 import { useUI } from '../../store/useUI.js'
 import { Avatar } from './Avatar.jsx'
 import Metrics from './Metrics.jsx'
+import Diet from './Diet.jsx'
+import Routines from './Routines.jsx'
 import { Loading, ErrorNote, useLoad } from './parts.jsx'
+import Upgrade from './Upgrade.jsx'
 import { refreshBadge } from './badge.js'
 import '../../forja.css'
 
 const toast = m => useUI.getState().toast(m)
 const SEX = { male: 'Hombre', female: 'Mujer' }
+// El gimnasio donde el entrenador dice estar se recuerda en este dispositivo.
+const GYM_KEY = 'forja_coach_gym'
+const savedGym = () => { try { return localStorage.getItem(GYM_KEY) } catch { return null } }
+const saveGym = id => { try { localStorage.setItem(GYM_KEY, id) } catch { /* sin almacenamiento */ } }
 
 function Notifications({ items, onSeen }) {
   const unread = items.filter(n => !n.read_at)
@@ -63,6 +70,14 @@ export function ClientsHome() {
   const pending = mine.filter(l => l.status === 'pending')
   const active = mine.filter(l => l.status === 'active')
   const full = !pro && active.length >= FREE_CLIENT_LIMIT
+  const hidden = useLoad(() => api().hiddenClients(), [pro])
+  const [upgrade, setUpgrade] = useState(false)
+  const myGyms = useLoad(async () => { const ids = await api().myTrainerGyms(); return ids.length ? api().gymsByIds(ids) : [] }, [])
+  const options = gymOptions(myGyms.data || [], active)
+  const [gym, setGym] = useState(savedGym)
+  const here = options.some(o => o.value === gym) ? gym : options[0]?.value
+  const shown = clientsAtGym(active, here)
+  const pick = id => { setGym(id); saveGym(id) }
   return <div className="narrow fj-page">
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
       <h1 className="fj-title">Clientes</h1>
@@ -76,10 +91,22 @@ export function ClientsHome() {
       {full && <div className="fj-note warn">Tienes {FREE_CLIENT_LIMIT} clientes, el máximo del plan Free. Pásate a Pro para aceptar más.</div>}
       <ul className="fj-requests">{pending.map(l => <Request key={l.id} link={l} full={full} onDone={reload} />)}</ul>
     </section>}
+    {hidden.data > 0 && <div className="fj-note warn" role="status">
+      <b>Tu plan Pro venció.</b> Con Free ves a tus {FREE_CLIENT_LIMIT} clientes más antiguos; {hidden.data === 1 ? 'otro queda oculto' : `otros ${hidden.data} quedan ocultos`} hasta que renueves. No se pierde nada: al renovar vuelven todos.
+      <div className="fj-row fj-note-actions"><Button variant="primary" size="sm" type="button" onClick={() => setUpgrade(true)}>Renovar Pro</Button></div>
+    </div>}
+    {upgrade && <Upgrade feature="Ver a todos tus clientes" onClose={() => setUpgrade(false)} />}
     {links.data && <section className="fj-card">
       <div className="fj-card-head"><h3>Mis clientes</h3><span className="dim small">{active.length}{pro ? '' : ` de ${FREE_CLIENT_LIMIT}`} · plan {pro ? 'Pro' : 'Free'}</span></div>
+      {active.length > 0 && options.length > 1 && <div className="fj-field">
+        <label htmlFor="fj-here">Estoy en</label>
+        <select id="fj-here" className="input" value={here} onChange={e => pick(e.target.value)}>
+          {options.map(o => <option key={o.value} value={o.value}>{o.label} ({o.count})</option>)}
+        </select>
+      </div>}
       {!active.length ? <p className="dim small">Aún no tienes clientes. Cuando alguien de tus gimnasios te elija, te llegará aquí la solicitud.</p>
-        : <ul className="fj-list">{active.map(l => <li key={l.id}>
+        : !shown.length ? <p className="dim small">No tienes clientes en este gimnasio.</p>
+        : <ul className="fj-list">{shown.map(l => <li key={l.id}>
           <button type="button" className="fj-item" onClick={() => nav('/clientes/' + l.client_id)}>
             <Avatar path={l.client?.avatar_path} name={l.client?.name} size={44} />
             <span className="fj-item-m"><b>{l.client?.name}</b><span>{[ageOn(l.client?.birth_date) != null && ageOn(l.client.birth_date) + ' años', SEX[l.client?.sex]].filter(Boolean).join(' · ')}</span></span>
@@ -125,6 +152,9 @@ export function ClientDetail() {
         <div className="dim small">Cliente desde {new Date(link.decided_at || link.requested_at).toLocaleDateString('es-VE')}</div>
       </div>
     </div>
+    <Routines clientId={c.id} clientName={c.name} canEdit />
     <Metrics clientId={c.id} canEdit pro={effectivePlan(row) === 'pro'} />
+    <Diet clientId={c.id} clientName={c.name} canEdit pro={effectivePlan(row) === 'pro'}
+      otherClients={active.filter(l => l.client_id !== c.id).map(l => ({ id: l.client_id, name: l.client?.name || 'Cliente' }))} />
   </div>
 }

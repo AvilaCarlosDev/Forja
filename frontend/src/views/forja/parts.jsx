@@ -1,6 +1,7 @@
 // Forja: piezas pequeñas que comparten las pantallas de Forja.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Icon from '../../components/Icon.jsx'
+import { SUPABASE_URL } from '../../lib/forja-config.js'
 
 // Carga datos asíncronos con estado de carga/error y una forma de recargar.
 export function useLoad(fn, deps = []) {
@@ -63,3 +64,24 @@ export const Loading = ({ text = 'Cargando…' }) => <div className="muted fj-ce
 export const ErrorNote = ({ error, retry }) => <div className="fj-note warn" role="alert">
   {error} {retry && <button type="button" className="fj-link" onClick={retry}>Reintentar</button>}
 </div>
+
+// Logo de un gimnasio (bucket público gym-logos) o sus iniciales si no tiene foto.
+export const gymLogoSrc = g => g?.logo_url || (g?.logo_path && SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/object/public/gym-logos/${g.logo_path}` : '')
+export function GymLogo({ gym, src, size = 44 }) {
+  const url = src || gymLogoSrc(gym)
+  const initials = String(gym?.name || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase()
+  return <span className="fj-gym-logo" style={{ width: size, height: size }} aria-hidden="true">
+    {url ? <img src={url} alt="" /> : <b data-i={initials} />}
+  </span>
+}
+
+// La tarjeta de un gimnasio: logo, nombre, sede y dirección.
+export function GymCard({ gym, src }) {
+  return <div className="fj-gym-card">
+    <GymLogo gym={gym} src={src} size={64} />
+    <div className="fj-item-m"><b>{gym?.name || 'Nombre del gimnasio'}</b>
+      <span>{[gym?.branch, gym?.address || 'Punto Fijo'].filter(Boolean).join(' · ')}</span>
+      {gym && gym.verified === false && <small className="dim">Por verificar</small>}
+    </div>
+  </div>
+}

@@ -49,8 +49,10 @@ export function createDb({ url, key, getToken, refresh, fetch: f = globalThis.fe
       const rows = await send(rest + table + '?select=' + encodeURIComponent(columns) + '&' + eqQuery(match) + '&limit=1')
       return Array.isArray(rows) ? rows[0] || null : null
     },
-    async update(table, match, patch) {
-      const rows = await send(rest + table + '?' + eqQuery(match), { method: 'PATCH', body: patch, headers: { Prefer: 'return=representation' } })
+    // select: las columnas que devuelve; hace falta en tablas con permiso de lectura por columna.
+    async update(table, match, patch, { select } = {}) {
+      const q = eqQuery(match) + (select ? '&select=' + encodeURIComponent(select) : '')
+      const rows = await send(rest + table + '?' + q, { method: 'PATCH', body: patch, headers: { Prefer: 'return=representation' } })
       return Array.isArray(rows) ? rows[0] || null : rows
     },
     // upsert: si ya existe la fila (misma clave primaria), se reemplaza.

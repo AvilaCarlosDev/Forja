@@ -4,10 +4,12 @@
 import { useState } from 'react'
 import { Button } from '../../components/ui.jsx'
 import { api } from '../../lib/forja-api.js'
-import { METRIC_FIELDS, GIRTHS, metricRow, latestValues, progress, bmi } from '../../lib/forja-coach.js'
+import { METRIC_FIELDS, GIRTHS, metricRow, latestValues, progress, bmi, metricSeries, chartableMetrics } from '../../lib/forja-coach.js'
+import LineChart from '../../components/LineChart.jsx'
 import { todayISO } from '../../lib/forja-profile.js'
 import { useUI } from '../../store/useUI.js'
-import { Field, Panel, Loading, ErrorNote, useLoad } from './parts.jsx'
+import { Field, Panel, Choice, Loading, ErrorNote, useLoad } from './parts.jsx'
+import Upgrade from './Upgrade.jsx'
 
 const toast = m => useUI.getState().toast(m)
 const fmt = v => (v == null ? '—' : String(Math.round(Number(v) * 10) / 10).replace('.', ','))
@@ -52,6 +54,43 @@ function AddMetric({ clientId, onSaved, onClose }) {
   </Panel>
 }
 
+// Una función Pro que no se tiene: la tarjeta se toca y abre «Mejora tu suscripción» (entrenador)
+// o explica que depende del plan del entrenador (cliente).
+function LockedCard({ title, text, feature, viewer }) {
+  const [open, setOpen] = useState(false)
+  return <>
+    <button type="button" className="fj-card fj-locked" onClick={() => setOpen(true)}>
+      <span className="fj-card-head"><h3>{title}</h3><span className="fj-badge">Pro</span></span>
+      <span className="dim small">{text}</span>
+      <span className="fj-locked-cta">{viewer === 'client' ? 'Ver por qué' : 'Mejorar a Pro para usarla'}</span>
+    </button>
+    {open && <Upgrade viewer={viewer} feature={feature} onClose={() => setOpen(false)} />}
+  </>
+}
+
+// Evolución de una medida en el tiempo (función Pro), con la meta de peso como referencia.
+function EvolutionCard({ rows, pro, targetWeight, viewer }) {
+  const options = chartableMetrics(rows)
+  const [key, setKey] = useState('weight_kg')
+  if (!options.length) return null
+  const sel = options.find(o => o.key === key) || options[0]
+  const pts = metricSeries(rows, sel.key)
+  const diff = pts.at(-1).y - pts[0].y
+  if (!pro) return <LockedCard title="Evolución" viewer={viewer} feature="La gráfica de evolución"
+    text={viewer === 'client' ? 'La gráfica de evolución es parte del plan Pro de tu entrenador.' : 'La gráfica de evolución es parte del plan Pro.'} />
+  return <section className="fj-card">
+    <div className="fj-card-head"><h3>Evolución</h3></div>
+    <>
+      <Choice id="fj-evo" options={options.map(o => ({ value: o.key, label: o.label }))} value={sel.key} onChange={setKey} />
+      <p className="fj-p"><b>{sel.label}</b>: {fmt(pts[0].y)} → {fmt(pts.at(-1).y)} {sel.unit}
+        <span className="dim"> ({sign(diff)} {sel.unit} en {pts.length} mediciones)</span></p>
+      <div className="chart"><LineChart points={pts} h={160} unit={sel.unit}
+        goal={sel.key === 'weight_kg' && targetWeight ? Number(targetWeight) : null} /></div>
+      {sel.key === 'weight_kg' && targetWeight && <small className="dim">La línea punteada es la meta: {fmt(targetWeight)} kg.</small>}
+    </>
+  </section>
+}
+
 function GoalCard({ clientId, canEdit }) {
   const goal = useLoad(() => api().goal(clientId), [clientId])
   const [editing, setEditing] = useState(false)
@@ -67,7 +106,7 @@ function GoalCard({ clientId, canEdit }) {
   }
   return <section className="fj-card">
     <div className="fj-card-head"><h3>Meta</h3>
-      {canEdit && !editing && <button type="button" className="fj-link" onClick={() => { setF({ goal: g?.goal || '', target_weight_kg: g?.target_weight_kg ?? '', target_date: g?.target_date || '' }); setEditing(true) }}>{g ? 'Cambiar' : 'Fijar meta'}</button>}
+      {canEdit && !editing && <Button variant="tinted" size="sm" type="button" onClick={() => { setF({ goal: g?.goal || '', target_weight_kg: g?.target_weight_kg ?? '', target_date: g?.target_date || '' }); setEditing(true) }}>{g ? 'Cambiar' : 'Fijar meta'}</Button>}
     </div>
     {editing ? <form className="fj-form" onSubmit={save} noValidate>
       <Field id="fj-goal" label="Objetivo"><input id="fj-goal" className="input" maxLength={300} placeholder="Ej.: bajar grasa y ganar fuerza" value={f.goal} onChange={e => setF(p => ({ ...p, goal: e.target.value }))} /></Field>
@@ -83,8 +122,9 @@ function GoalCard({ clientId, canEdit }) {
   </section>
 }
 
-export default function Metrics({ clientId, canEdit, pro, readOnlyNote }) {
+export default function Metrics({ clientId, canEdit, pro, readOnlyNote, viewer = 'trainer' }) {
   const rows = useLoad(() => api().metrics(clientId), [clientId])
+  const goal = useLoad(() => api().goal(clientId), [clientId])
   const [adding, setAdding] = useState(false)
   if (rows.loading && !rows.data) return <Loading text="Cargando medidas…" />
   if (rows.error) return <ErrorNote error={rows.error} retry={rows.reload} />
@@ -110,14 +150,17 @@ export default function Metrics({ clientId, canEdit, pro, readOnlyNote }) {
         </div>}
     </section>
     <GoalCard clientId={clientId} canEdit={canEdit} />
-    {Object.keys(prog).length > 0 && <section className="fj-card">
-      <div className="fj-card-head"><h3>Avance desde el inicio</h3>{!pro && <span className="fj-badge">Pro</span>}</div>
-      {pro ? <div className="fj-stats">
+    <EvolutionCard rows={data} pro={pro} viewer={viewer} targetWeight={goal.data?.target_weight_kg} />
+    {Object.keys(prog).length > 0 && !pro && <LockedCard title="Avance desde el inicio" viewer={viewer} feature="La comparativa de inicio contra hoy"
+      text={viewer === 'client' ? 'La comparativa de inicio contra hoy es parte del plan Pro de tu entrenador.' : 'La comparativa de inicio contra hoy es parte del plan Pro.'} />}
+    {Object.keys(prog).length > 0 && pro && <section className="fj-card">
+      <div className="fj-card-head"><h3>Avance desde el inicio</h3></div>
+      <div className="fj-stats">
         {METRIC_FIELDS.filter(f => prog[f.key]).map(f => <div key={f.key} className="fj-stat">
           <span>{f.label}</span><b>{sign(prog[f.key].diff)} <small>{f.unit}</small></b>
           <small className="dim">{fmt(prog[f.key].first)} → {fmt(prog[f.key].last)}</small>
         </div>)}
-      </div> : <p className="dim small">La comparativa de inicio contra hoy es parte del plan Pro del entrenador.</p>}
+      </div>
     </section>}
     {data.length > 0 && <section className="fj-card">
       <div className="fj-card-head"><h3>Historial</h3><span className="dim small">{data.length} {data.length === 1 ? 'registro' : 'registros'}</span></div>

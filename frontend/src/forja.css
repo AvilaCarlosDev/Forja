@@ -158,3 +158,77 @@
 .fj-status.vencido{background:rgba(255,84,84,.16);color:var(--red)}
 .fj-list>li{display:flex;flex-direction:column;gap:6px}
 .fj-pay-row{margin:0 2px 4px}
+/* Dieta (función Pro): comidas con sus alimentos y totales contra el objetivo del día */
+.fj-meter{height:6px;border-radius:3px;background:var(--sep-op);overflow:hidden;margin-top:4px}
+.fj-meter i{display:block;height:100%;background:var(--acc);border-radius:3px}
+.fj-meter.over i{background:var(--red)}
+.fj-meals,.fj-foods,.fj-food-results{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.fj-meal{padding:10px 0;border-top:1px solid var(--sep-op);display:flex;flex-direction:column;gap:4px}
+.fj-meal:first-child{border-top:0}
+.fj-meal-head{display:flex;align-items:baseline;gap:8px}
+.fj-meal-head b{font-size:16px}
+.fj-meal-kcal{margin-inline-start:auto}
+.fj-foods li{display:flex;flex-direction:column;gap:1px;padding:5px 0;font-size:15px}
+.fj-foods li .fj-link{min-height:0;padding:2px 0;font-size:13px}
+.fj-meal-edit{background:var(--surface)}
+.fj-meal-fields{display:grid;grid-template-columns:1fr 112px auto;gap:8px;align-items:center}
+.fj-adder{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:12px;background:var(--bg)}
+.fj-food-results{gap:6px}
+.fj-food-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:6px}
+.fj-food-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;min-height:84px;border-radius:12px;
+  border:1px solid var(--sep-op);background:var(--surface);color:var(--label);font:inherit;font-size:12px;line-height:1.2;text-align:center;cursor:pointer}
+.fj-food-btn:hover{border-color:var(--acc)}
+.fj-food-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.fj-food-icon{font-size:28px;line-height:1}
+.fj-food-picked span{font-size:22px}
+.fj-grams{display:flex;flex-wrap:wrap;gap:6px}
+.fj-grams .fj-chip{display:flex;flex-direction:column;align-items:center;min-width:64px}
+.fj-grams .fj-chip small{font-size:11px;color:var(--label-2);font-weight:400}
+.fj-grams-own{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.fj-foods li.fj-food{flex-direction:row;align-items:flex-start;gap:10px}
+.fj-food .fj-food-icon{font-size:24px;width:36px;height:36px;flex:none;display:grid;place-items:center;border-radius:10px;background:var(--bg)}
+.fj-food-m{display:flex;flex-direction:column;gap:1px;min-width:0}
+/* Tarjeta del gimnasio: logo (o iniciales), nombre, sede y dirección */
+.fj-gym-logo{flex:none;display:grid;place-items:center;border-radius:12px;overflow:hidden;background:#fff;color:#111619}
+.fj-gym-logo img{width:100%;height:100%;object-fit:contain}
+.fj-gym-logo b{font-size:15px;letter-spacing:.5px}
+.fj-gym-logo b::after{content:attr(data-i)}
+.fj-gym-card{display:flex;align-items:center;gap:14px;padding:14px;border-radius:var(--r-card);background:var(--surface);border:1px dashed var(--sep)}
+.fj-row .fj-logo-pick{flex:1 1 140px}
+/* Tarjeta de perfil en el inicio */
+.fj-profile-card{display:flex;align-items:center;gap:14px;width:100%;margin:0 0 12px;padding:14px 16px;border:0;border-radius:var(--r-card);
+  background:var(--surface);color:var(--label);font:inherit;text-align:start;cursor:pointer}
+.fj-profile-card:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.fj-profile-card .fj-item-m b{font-size:18px}
+.fj-profile-card-gym{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.fj-profile-card-gym .fj-gym-logo{border-radius:5px}
+.fj-profile-card-gym .fj-gym-logo b{font-size:9px}
+.fj-btn-wide{width:100%}
+.fj-btn-start{align-self:flex-start}
+.fj-note-actions{margin-top:8px}
+/* Función Pro bloqueada: la tarjeta se toca y abre «Mejora tu suscripción» */
+.fj-locked{width:100%;border:1px dashed var(--sep);color:var(--label);font:inherit;text-align:start;cursor:pointer}
+.fj-locked:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.fj-locked-cta{display:flex;align-items:center;gap:4px;color:var(--acc);font-size:15px;font-weight:600}
+.fj-perks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:15px}
+.fj-perks li{display:flex;align-items:flex-start;gap:8px}
+.fj-perks .icn{color:var(--acc);flex:none;margin-top:2px}
+/* Rutinas asignadas: ejercicios con su imagen y la dosis del coach */
+.fj-routine{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-top:1px solid var(--sep-op)}
+.fj-routine:first-of-type{border-top:0}
+.fj-routine-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.fj-routine-head b{font-size:16px}
+.fj-ex-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.fj-ex-open{display:flex;align-items:center;gap:12px;width:100%;padding:6px;border:0;border-radius:12px;background:var(--bg);color:var(--label);font:inherit;text-align:start;cursor:pointer}
+.fj-ex-open:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.fj-ex-thumb{flex:none;display:block;border-radius:10px;overflow:hidden;background:#fff}
+.fj-ex-thumb img{width:100%;height:100%;object-fit:contain}
+.fj-ex-media{border-radius:var(--r-card);overflow:hidden;background:#fff;display:grid;place-items:center}
+.fj-ex-media img{width:100%;max-height:320px;object-fit:contain}
+.fj-ex-edit{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:12px;background:var(--bg)}
+.fj-ex-edit-head{display:flex;align-items:center;gap:10px}
+.fj-ex-edit-head b{flex:1;min-width:0;font-size:15px}
+.fj-ex-edit-tools{display:flex;gap:2px}
+.fj-ex-dose{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fj-ex-dose label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--label-2)}
+.fj-days .fj-chip{min-width:0;flex:1 1 0;padding:10px 4px}

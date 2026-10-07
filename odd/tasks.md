@@ -72,3 +72,86 @@ Alcance: el cliente elige su gimnasio de Punto Fijo (o "Otro", o en casa) y, si 
 ## Publicación (2026-10-06)
 
 `forja/3.1-perfil` fusionada por avance rápido en `forja/fase-1` y desplegada en https://forja-trainer.vercel.app: el bundle publicado contiene el asistente, Mi coach y los gimnasios; `forja/login.webm` responde 200 (825 KB); la pantalla de entrada carga sin errores de consola.
+
+## 0008 — Finanzas solo para el plan Pro (2026-10-07)
+
+Alcance: la app ya escondía Finanzas a los entrenadores Free, pero las funciones de 0007 no lo verificaban. Ahora la base lo exige y se quita EXECUTE de PUBLIC.
+
+| # | Tarea | Estado | Evidencia |
+|---|---|---|---|
+| 1 | `0008_forja_finanzas_pro.sql`: `forja_require_pro()` en mensualidad, registrar y borrar pago; leer el historial sigue abierto | Hecho | `0008_forja_finanzas_pro.test.sql` **8/8** en PGlite; 0002 13/13, 0005 24/24, 0006 8/8, 0007 12/12 (su prueba ahora usa entrenadores Pro) |
+| 2 | La vista previa aplica la misma regla (`requirePro` en `forja-api.js`) | Hecho | `Finanzas.test.jsx`: plan Free rechaza las tres escrituras |
+| 3 | Suite completa | Hecho | 3269/3278 con Node 22; los 9 rojos (SyncBanner, media-prefetch, default-lang, CoachChat) los causa `frontend/.env.local` y también fallan en HEAD con ese archivo; sin él pasan |
+| 4 | Ejecutar 0008 y su prueba en Supabase real | Pendiente | — |
+
+## 0009 — Dieta del cliente (función Pro) (2026-10-07)
+
+Alcance: el entrenador Pro arma la dieta de su cliente (comidas del día con alimentos y porciones, objetivos diarios y totales calculados por alimento). El cliente la ve en solo lectura. Con Free no se muestra ni se edita, pero no se borra. Regla de `docs/PLAN.md`: dietas, finanzas y comparativa son Pro.
+
+| # | Tarea | Estado | Evidencia |
+|---|---|---|---|
+| 1 | `lib/forja-diet.js`: 41 alimentos comunes en Venezuela (valores aproximados por 100 g), porciones caseras, totales por comida y por día contra el objetivo, alimento propio | Hecho | `forja-diet.test.js` 9/9 (incluye coherencia kcal ≈ 4/4/9 de cada alimento) |
+| 2 | `0009_forja_dietas.sql`: tabla `diet_plans` (una por cliente), lectura por RLS, escritura solo por `forja_set_diet` / `forja_delete_diet` (Pro vigente + entrenador activo) y validación de forma y límites | Hecho | `0009_forja_dietas.test.sql` **11/11** en PGlite; la prueba 4 encontró un hueco (alimento sin gramos pasaba por NULL) y quedó corregido |
+| 3 | Pantalla `views/forja/Diet.jsx`: vista con barras contra el objetivo y editor (buscar alimento, gramos, alimento propio, comidas, indicaciones) en la ficha del cliente y en Mi coach | Hecho | `Diet.test.jsx` 5/5; recorrido en el navegador con las dos sesiones demo |
+| 4 | Sesiones demo con dietas (María, José y Lucía) | Hecho | `scripts/forja-demo-sessions.mjs` |
+| 5 | Suite y build | Hecho | 3283/3292 (los 9 rojos de `.env.local`, ver 0008); build ok |
+| 6 | Ejecutar 0008 y 0009 con sus pruebas en Supabase real | Pendiente | — |
+
+## v0.9.0 — Finanzas Pro, dietas, gráficas, clientes por gimnasio y avisos (2026-10-07)
+
+| # | Tarea | Estado | Evidencia |
+|---|---|---|---|
+| 1 | Gráfica de evolución por medida (Pro), con la meta de peso | Hecho | `forja-coach.test.js` (`metricSeries`, `chartableMetrics`); recorrido en el navegador |
+| 2 | Sesiones demo con meses de historia (6 meses María, 4 José, 5 Ana, 6 Lucía) y curvas reales | Hecho | `scripts/forja-demo-sessions.mjs` |
+| 3 | Dieta: grilla de íconos por categoría, porciones rápidas, plantillas (déficit, mantenimiento, volumen), copiar de otro cliente, íconos también en la vista del cliente | Hecho | `forja-diet.test.js` 12/12, `Diet.test.jsx` 7/7 |
+| 4 | Fase 1 de `docs/plan-coach-controla.md`: «Estoy en…» filtra los clientes por gimnasio | Hecho | `forja-coach.test.js` (`clientsAtGym`, `gymOptions`); navegador |
+| 5 | Fase 2: `0010_forja_avisos.sql`, avisos al cliente al guardar su dieta o cargarle medidas (sin repetir en el día si no leyó) | Hecho | `0010_forja_avisos.test.sql` **6/6** en PGlite; 0002–0009 siguen verdes |
+| 6 | Suite y build | Hecho | 3293/3302 (los 9 rojos de `.env.local`); build ok |
+| 7 | Ejecutar 0008, 0009 y 0010 en Supabase real y `vercel --prod` | Pendiente, con OK de Carlos | — |
+
+## Después de v0.9.0 (2026-10-07, tarde)
+
+| # | Tarea | Estado | Evidencia |
+|---|---|---|---|
+| 1 | Tarjeta del gimnasio con foto del logo (cámara o galería), dirección y logos en la lista | Hecho | `ProfileEdit.test.jsx` |
+| 2 | Tarjeta de perfil en el inicio; botones en vez de enlaces en Mi coach, meta y dieta | Hecho | navegador |
+| 3 | Check-in con QR de openGym escondido en Forja (la asistencia va aparte, fase 5) | Hecho | `Home`/`Settings` tests |
+| 4 | Peso (obligatorio) y talla al completar el perfil; sin pedir peso antes de cada entrenamiento | Hecho | `Onboarding.test.jsx`, `forja-profile.test.js` |
+| 5 | Funciones Pro bloqueadas (dieta, evolución, comparativa) abren «Mejora tu suscripción» o explican que depende del coach; botón de WhatsApp de planes | Hecho | `Diet.test.jsx`, `FreeLimit.test.jsx` |
+| 6 | `0011_forja_limite_free.sql`: al vencer Pro, el coach ve solo sus 5 clientes más antiguos (vínculos, perfiles, fotos, medidas, metas y dieta) | Hecho | `0011_forja_limite_free.test.sql` **9/9**; 0002–0010 siguen verdes; `FreeLimit.test.jsx` 2/2 |
+| 7 | Suite y build | Hecho | 3299/3308 (los 9 rojos de `.env.local`); build ok |
+
+## Suite en verde (2026-10-07)
+
+| # | Tarea | Estado | Evidencia |
+|---|---|---|---|
+| 1 | 8 rojos (SyncBanner, idioma por defecto, media-prefetch) los causaba `frontend/.env.local` (modo vista previa de Forja y CDN de imágenes): `vite.config.js` → `test.env` los anula durante las pruebas | Hecho | la suite ya no depende del `.env.local` de cada máquina |
+| 2 | `CoachChat.demo-failure` fallaba a veces: la importación dinámica del Coach demo no alcanzaba a resolverse en las 20 microtareas de `flush` con la máquina ocupada. La prueba ahora la carga antes (`beforeAll`) | Hecho | 3 corridas sueltas y 2 suites completas en verde |
+| 3 | Suite completa | Hecho | **3308/3308** con Node 22, dos veces; SQL 8/8 archivos OK (0002, 0005–0011); build ok |
+
+## Fase 3 — Rutinas asignadas (2026-10-07)
+
+Alcance: el coach (Free o Pro, dentro de su cupo) arma rutinas para su cliente con el buscador de ejercicios de openGym y les pone series, repeticiones, peso e indicaciones. El cliente recibe el aviso, la rutina entra a su plan de la semana y a «Entrenar», y se entrena tal cual (sin progresión automática). En Plan la ve en solo lectura, con la animación de cada ejercicio.
+
+| # | Tarea | Estado | Evidencia |
+|---|---|---|---|
+| 1 | `0012_forja_rutinas.sql`: tabla `assigned_routines`, lectura por RLS, escritura solo por `forja_set_routine` / `forja_delete_routine` (coach activo dentro del cupo), validación y aviso `routine_assigned` | Hecho | `0012_forja_rutinas.test.sql` **10/10**; 0002–0011 siguen verdes |
+| 2 | `lib/forja-routines.js`: formulario, conversión a rutina de openGym (`excludeFromProgression`), mezcla en el plan y la semana sin tocar las rutinas propias | Hecho | `forja-routines.test.js` 6/6 (incluye que la sesión abre con el peso del coach aunque el historial sea mayor) |
+| 3 | Pantallas: «Rutinas» en la ficha del cliente (asignar, editar, ordenar, borrar), «Mis rutinas» en Mi coach, rutina asignada en solo lectura desde Plan, detalle del ejercicio con su animación | Hecho | `Routines.test.jsx` 3/3; navegador |
+| 4 | Sincronización al abrir la app y al volver a ella (`AssignedSync`) | Hecho | `Routines.test.jsx` |
+| 5 | Sesiones demo con rutinas asignadas (María, José, Lucía) | Hecho | `scripts/forja-demo-sessions.mjs` |
+| 6 | Suite y build | Hecho | **3317/3317**; SQL 9/9 archivos; build ok |
+
+## Seguridad: prioritarias de Cyber Neo y términos al entrar (2026-10-07, noche)
+
+Informe: `~/cyber-neo-report-Forja-orquestador-2026-10-07.md`.
+
+| # | Tarea | Estado | Evidencia |
+|---|---|---|---|
+| 1 | CN-004: sesiones demo fuera de `public/` (a `frontend/demo/`, solo con `npm run dev`); el cargador ya no usa `eval` ni `localStorage.clear()` y se niega si hay sesión real o entrenamientos | Hecho | `demo/cargar.test.js` 6/6; el build no las incluye |
+| 2 | CN-005: `frontend/vercel.json` con CSP, `frame-ancestors 'none'`, nosniff, Referrer-Policy, Permissions-Policy y HSTS; el script de idioma pasa a `public/lang-dir.js` | Hecho | `security-headers.test.js` 5/5; build servido con las cabeceras en Chromium: 6 pantallas sin violaciones |
+| 3 | Casilla obligatoria de términos y privacidad en «Entrar»; Google/Apple no salen sin ella (también en «Crear cuenta») | Hecho | `Auth.terms.test.jsx` 5/5; captura |
+| 4 | CN-003: `0013_forja_perfil_privado.sql`, lectura de `profiles` por columna (sin `is_admin`, `terms_accepted_at`, `role_chosen` ni fechas internas); la fila propia por `forja_me()` | Hecho | `0013_forja_perfil_privado.test.sql` **8/8** (4/8 sin el revoke); `forja-session.test.js` 3/3 |
+| 5 | Suite y build | Hecho | **3337/3337**; SQL 10/10 archivos; build ok |
+| 6 | Ejecutar 0008–0013 en Supabase real y `vercel --prod` | Hecho | pruebas en producción: 0008 8/8, 0009 11/11, 0010 6/6, 0011 9/9, 0012 10/10, 0013 8/8; forja-trainer.vercel.app con CSP, sin sesiones demo (404), service worker activo |
+| 7 | CN-001: Capacitor 7.6.8 → 7.6.9 (core, android, ios, cli; GHSA-rvm3-566m-v7fv) | Hecho | `npm audit --omit=dev`: 0 vulnerabilidades; el aviso ya no aparece en `npm audit`; suite y build ok |

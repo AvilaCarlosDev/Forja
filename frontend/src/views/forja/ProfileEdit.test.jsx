@@ -111,6 +111,25 @@ describe('Forja — editar perfil (entrenador)', () => {
     expect(onClose).toHaveBeenCalled()
   })
 
+  it('creates the card of a gym that is not listed, with its address, and picks it', async () => {
+    await start('trainer', { name: 'Carlos', sex: 'male', birth_date: '1988-07-01' })
+    await flush()
+    await click(byText('button', 'Otro'))
+    const panel = [...document.querySelectorAll('[role=dialog]')].at(-1)
+    expect(panel.textContent).toMatch('Tomar foto')
+    expect(panel.querySelector('input[capture=environment]')).toBeTruthy()
+    const put = async (id, v) => type(document.getElementById(id), v)
+    await put('fj-gym-name', 'Iron Box')
+    await put('fj-gym-address', 'Av. Ollarvides, local 4')
+    expect(panel.querySelector('.fj-gym-card').textContent).toMatch('Iron Box')
+    await put('fj-gym-social', '@ironboxpf')
+    await act(async () => { panel.querySelector('form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })) }); await flush()
+    const g = previewDb().gyms.find(x => x.name === 'Iron Box')
+    expect(g).toMatchObject({ address: 'Av. Ollarvides, local 4', verified: false })
+    await submit()
+    expect(previewDb().trainerGyms.preview).toEqual([g.id])
+  })
+
   it('needs at least one gym or the remote option', async () => {
     await start('trainer', { name: 'Carlos', sex: 'male', birth_date: '1988-07-01' })
     await flush()

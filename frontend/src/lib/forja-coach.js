@@ -31,6 +31,7 @@ export function validateGymSuggestion(f = {}, existing = []) {
   else if (name.length > 80) e.name = 'El nombre es demasiado largo'
   const social = String(f.social || '').trim()
   if (social && !normalizeSocial(social)) e.social = 'Pega el enlace o el @usuario de Instagram, X, Facebook o TikTok'
+  if (String(f.address || '').trim().length > 120) e.address = 'La dirección es demasiado larga'
   if (!social && !f.logo) e.proof = 'Agrega su red social o una foto del logo para poder validar que existe'
   const key = s => String(s || '').trim().toLowerCase()
   if (!e.name && existing.some(g => key(g.name) === key(name) && key(g.branch) === key(f.branch))) e.name = 'Ese gimnasio ya está en la lista'
@@ -66,8 +67,31 @@ export const NOTIFICATION_TEXT = {
   link_rejected: n => `${n.actor_name || 'El entrenador'} no aceptó tu solicitud`,
   link_ended: n => `${n.actor_name || 'Un cliente'} ya no entrena contigo`,
   link_cancelled: n => `${n.actor_name || 'Un cliente'} retiró su solicitud`,
+  diet_updated: n => `${n.actor_name || 'Tu coach'} te envió tu dieta`,
+  metrics_added: n => `${n.actor_name || 'Tu coach'} cargó tus nuevas medidas`,
+  routine_assigned: n => `${n.actor_name || 'Tu coach'} te asignó una rutina`,
 }
 export const notificationText = n => (NOTIFICATION_TEXT[n?.kind] || (() => 'Novedad en tu cuenta'))(n || {})
+
+// ---- Clientes por gimnasio --------------------------------------------------------------------
+
+// El entrenador trabaja en un gimnasio a la vez: ve los clientes activos de ese gimnasio.
+// 'remote' = clientes a distancia o sin gimnasio; 'all' = todos.
+export function clientsAtGym(links = [], gymId) {
+  if (!gymId || gymId === 'all') return links
+  if (gymId === 'remote') return links.filter(l => !l.client?.gym_id)
+  return links.filter(l => l.client?.gym_id === gymId)
+}
+
+// Opciones del selector «Estoy en…»: sus gimnasios (con cuántos clientes tiene en cada uno),
+// «A distancia» si tiene clientes sin gimnasio, y «Todos».
+export function gymOptions(trainerGyms = [], links = []) {
+  const opts = trainerGyms.map(g => ({ value: g.id, label: gymLabel(g), count: clientsAtGym(links, g.id).length }))
+  const remote = clientsAtGym(links, 'remote').length
+  if (remote) opts.push({ value: 'remote', label: 'A distancia', count: remote })
+  opts.push({ value: 'all', label: 'Todos', count: links.length })
+  return opts
+}
 
 // ---- Medidas ---------------------------------------------------------------------------------
 
@@ -139,6 +163,28 @@ export function progress(rows = []) {
   }
   return res
 }
+
+// Serie de una medida en el tiempo para la gráfica de evolución (función Pro): un punto por
+// fecha con valor, del más viejo al más nuevo. `key` es un campo de METRIC_FIELDS o un perímetro.
+export function metricSeries(rows = [], key) {
+  const girth = GIRTHS.some(g => g.key === key)
+  const pts = []
+  for (const r of rows) {
+    const v = girth ? r.measurements?.[key] : r[key]
+    if (v == null || !Number.isFinite(Number(v)) || !r.measured_on) continue
+    pts.push({ t: Date.parse(r.measured_on + 'T12:00:00'), y: Number(v), d: r.measured_on, created: r.created_at || '' })
+  }
+  pts.sort((a, b) => a.t - b.t || String(a.created).localeCompare(String(b.created)))
+  // Dos mediciones el mismo día: queda la última cargada.
+  const out = []
+  for (const p of pts) { if (out.length && out.at(-1).t === p.t) out.pop(); out.push({ t: p.t, y: p.y, d: p.d }) }
+  return out
+}
+
+// Medidas con al menos dos puntos: las únicas que tiene sentido graficar.
+export const chartableMetrics = (rows = []) =>
+  [...METRIC_FIELDS.filter(f => f.key !== 'height_cm'), ...GIRTHS.map(g => ({ ...g, unit: 'cm' }))]
+    .filter(f => metricSeries(rows, f.key).length >= 2)
 
 // ---- Finanzas ----------------------------------------------------------------------------------
 

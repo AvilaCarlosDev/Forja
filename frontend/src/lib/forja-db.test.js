@@ -42,6 +42,12 @@ describe('createDb', () => {
     expect(JSON.parse(calls[0].init.body)).toEqual({ birth_date: '1995-05-20' })
   })
 
+  it('patches returning only the columns asked for', async () => {
+    const { f, calls } = fakeFetch(reply(200, [{ id: 'u1' }]))
+    expect(await createDb(opts(f)).update('profiles', { id: 'u1' }, { name: 'Ana' }, { select: 'id' })).toEqual({ id: 'u1' })
+    expect(calls[0].url).toBe('https://x.supabase.co/rest/v1/profiles?id=eq.u1&select=id')
+  })
+
   it('upserts when asked', async () => {
     const { f, calls } = fakeFetch(reply(201, [{ user_id: 'u1' }]))
     await createDb(opts(f)).insert('guardian_consents', { user_id: 'u1' }, { upsert: true })

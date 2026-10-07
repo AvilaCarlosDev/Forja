@@ -45,6 +45,18 @@ export function validateDetails(f = {}, today = todayISO()) {
   return e
 }
 
+// Peso (obligatorio) y talla (opcional) al completar el perfil: son el punto de partida de la
+// curva de peso y de las medidas, así la app no vuelve a pedirlos.
+export function validateBody(f = {}) {
+  const e = {}
+  const n = v => (v === '' || v == null ? null : Number(String(v).replace(',', '.')))
+  const w = n(f.weight_kg), h = n(f.height_cm)
+  if (w == null) e.weight_kg = 'Escribe tu peso'
+  else if (!(w >= 20 && w <= 400)) e.weight_kg = 'Peso: entre 20 y 400 kg'
+  if (h != null && !(h >= 80 && h <= 250)) e.height_cm = 'Talla: entre 80 y 250 cm'
+  return { errors: e, weight_kg: Number.isFinite(w) ? Math.round(w * 10) / 10 : null, height_cm: Number.isFinite(h) ? Math.round(h) : null }
+}
+
 export function validateGuardian(g = {}) {
   const e = {}
   const name = String(g.guardian_name || '').trim()

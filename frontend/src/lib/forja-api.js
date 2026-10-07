@@ -18,13 +18,13 @@ const LINK_SELECT = '*,client:profiles!coach_links_client_id_fkey(id,name,avatar
 
 export const remoteApi = {
   listGyms: () => db.select('gyms', 'select=id,name,branch,address,social_url,logo_path,verified&order=name.asc,branch.asc'),
-  async suggestGym({ name, branch, social_url, logo }) {
+  async suggestGym({ name, branch, address, social_url, logo }) {
     let logo_path = null
     if (logo) {
       logo_path = `${me()}/logo-${Date.now()}.webp`
       await db.upload('gym-logos', logo_path, logo, 'image/webp')
     }
-    return db.insert('gyms', { name: name.trim(), branch: branch?.trim() || null, social_url: social_url || null, logo_path, created_by: me() })
+    return db.insert('gyms', { name: name.trim(), branch: branch?.trim() || null, address: address?.trim() || null, social_url: social_url || null, logo_path, created_by: me() })
   },
   setClientGym: (gymId, remote) => updateProfile({ gym_id: gymId || null, remote: !!remote }),
   async myTrainerGyms() {
@@ -49,6 +49,10 @@ export const remoteApi = {
   }),
   deletePayment: id => db.rpc('forja_delete_payment', { p_id: id }),
   myPayments: () => db.select('payments', `select=*&or=(trainer_id.eq.${me()},client_id.eq.${me()})&order=period.desc,paid_at.desc`),
+  hiddenClients: () => db.rpc('forja_hidden_clients'),
+  routines: clientId => db.select('assigned_routines', `select=*&client_id=eq.${clientId}&order=created_at.asc`),
+  setRoutine: (clientId, id, r) => db.rpc('forja_set_routine', { p_client: clientId, p_id: id || null, p_name: r.name, p_days: r.days, p_exercises: r.exercises, p_note: r.note || null }),
+  deleteRoutine: id => db.rpc('forja_delete_routine', { p_id: id }),
   myLinks: () => db.select('coach_links', `select=${encodeURIComponent(LINK_SELECT)}&or=(client_id.eq.${me()},trainer_id.eq.${me()})&status=in.(pending,active)&order=requested_at.desc`),
   notifications: () => db.select('notifications', 'select=*&order=created_at.desc&limit=30'),
   markRead: () => db.update('notifications', { user_id: me() }, { read_at: new Date().toISOString() }),
@@ -57,6 +61,9 @@ export const remoteApi = {
   deleteMetric: id => db.del('body_metrics', 'id=eq.' + id),
   goal: clientId => db.one('client_goals', { client_id: clientId }),
   setGoal: (clientId, g) => db.insert('client_goals', { client_id: clientId, ...g }, { upsert: true }),
+  diet: clientId => db.one('diet_plans', { client_id: clientId }),
+  setDiet: (clientId, { targets, meals, notes }) => db.rpc('forja_set_diet', { p_client: clientId, p_targets: targets, p_meals: meals, p_notes: notes || null }),
+  deleteDiet: clientId => db.rpc('forja_delete_diet', { p_client: clientId }),
   gymsByIds: ids => !ids.length ? Promise.resolve([]) : db.select('gyms', 'select=id,name,branch&id=in.' + inList(ids)),
 }
 // ---------------------------------------------------------------------------------------------
@@ -96,7 +103,25 @@ function person(d, id) {
   return d.people.find(p => p.id === id) || null
 }
 const fail = m => { throw new Error(m) }
+// Igual que forja_require_pro() en 0008: finanzas y dietas solo se escriben con el plan Pro vigente.
+const requirePro = () => { if (effectivePlan(getProfile().row || {}) !== 'pro') fail('Es una función Pro. Pásate a Pro para usarla.') }
 const notify = (d, user_id, kind, link_id, actor) => d.notifications.unshift({ id: uid(), user_id, kind, link_id, actor_id: actor, actor_name: person(d, actor)?.name, created_at: now(), read_at: null })
+// Igual que forja_notify_client() en 0010: el entrenador que envía algo avisa al cliente, sin
+// repetir un aviso igual que siga sin leer en el día.
+function notifyClient(d, clientId, kind) {
+  if (clientId === me()) return
+  const today = now().slice(0, 10)
+  if (d.notifications.some(n => n.user_id === clientId && n.kind === kind && n.actor_id === me() && !n.read_at && n.created_at.slice(0, 10) === today)) return
+  notify(d, clientId, kind, d.links.find(l => l.client_id === clientId && l.trainer_id === me() && l.status === 'active')?.id || null, me())
+}
+// Igual que forja_link_visible() en 0011: con Free, el entrenador ve solo sus 5 clientes activos
+// más antiguos; el resto queda oculto (en cualquier gimnasio) hasta que renueve Pro.
+function hiddenLinkIds(d) {
+  if (getProfile().row?.role !== 'trainer' || effectivePlan(getProfile().row || {}) === 'pro') return []
+  const key = l => (l.decided_at || l.requested_at) + l.id
+  return d.links.filter(l => l.trainer_id === me() && l.status === 'active').sort((a, b) => key(a).localeCompare(key(b)))
+    .slice(FREE_CLIENT_LIMIT).map(l => l.id)
+}
 const activeTrainer = (d, clientId) => d.links.find(l => l.client_id === clientId && l.status === 'active')?.trainer_id || null
 
 // En la vista previa, el entrenador de prueba recibe una solicitud de "María Demo" para ver ese lado.
@@ -110,10 +135,13 @@ function seedRequestFor(d, trainerId) {
 const ok = v => Promise.resolve(v)
 export const previewApi = {
   listGyms: () => ok(load().gyms),
-  suggestGym({ name, branch, social_url, logo }) {
+  async suggestGym({ name, branch, address, social_url, logo }) {
+    // Sin servidor, el logo se guarda como data URL para que la tarjeta se vea igual.
+    const logo_url = logo ? await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(logo) }) : null
     const d = load()
-    const g = { id: uid(), name: name.trim(), branch: branch?.trim() || null, social_url: social_url || null, logo_path: logo ? 'preview-logo' : null, verified: false, created_by: me() }
-    d.gyms.push(g); save(d); return ok(g)
+    const g = { id: uid(), name: name.trim(), branch: branch?.trim() || null, address: address?.trim() || null, social_url: social_url || null,
+      logo_path: logo ? 'preview-logo' : null, logo_url, verified: false, created_by: me() }
+    d.gyms.push(g); save(d); return g
   },
   setClientGym: (gymId, remote) => updateProfile({ gym_id: gymId || null, remote: !!remote }),
   myTrainerGyms: () => ok(load().trainerGyms[me()] || []),
@@ -156,10 +184,35 @@ export const previewApi = {
     }
     save(d); return ok(null)
   },
+  hiddenClients: () => ok(hiddenLinkIds(load()).length),
+  routines: clientId => ok((load().routines || []).filter(r => r.client_id === clientId)),
+  setRoutine(clientId, id, r) {
+    const d = load()
+    if (activeTrainer(d, clientId) !== me() || hiddenLinkIds(d).includes(d.links.find(l => l.client_id === clientId && l.status === 'active')?.id))
+      fail('Ese cliente no está vinculado a ti')
+    d.routines ||= []
+    const row = { client_id: clientId, trainer_id: me(), name: r.name, days: r.days, exercises: r.exercises, note: r.note || null, updated_at: now() }
+    let out
+    if (id) {
+      const i = d.routines.findIndex(x => x.id === id && x.client_id === clientId)
+      if (i < 0) fail('Esa rutina no es de este cliente')
+      out = d.routines[i] = { ...d.routines[i], ...row }
+    } else {
+      if (d.routines.filter(x => x.client_id === clientId).length >= 14) fail('El cliente ya tiene 14 rutinas')
+      out = { id: uid(), created_at: now(), ...row }; d.routines.push(out)
+    }
+    notifyClient(d, clientId, 'routine_assigned'); save(d); return ok(out)
+  },
+  deleteRoutine(id) {
+    const d = load(), r = (d.routines || []).find(x => x.id === id)
+    if (!r || activeTrainer(d, r.client_id) !== me()) fail('Esa rutina no es de un cliente tuyo')
+    d.routines = d.routines.filter(x => x.id !== id); save(d); return ok(null)
+  },
   myLinks() {
     const d = load()
     const pick = (p, keys) => p && Object.fromEntries(keys.map(k => [k, p[k] ?? null]))
-    return ok(d.links.filter(l => (l.client_id === me() || l.trainer_id === me()) && ['pending', 'active'].includes(l.status))
+    const hidden = new Set(hiddenLinkIds(d))
+    return ok(d.links.filter(l => (l.client_id === me() || l.trainer_id === me()) && ['pending', 'active'].includes(l.status) && !hidden.has(l.id))
       .map(l => ({ ...l,
         client: pick(person(d, l.client_id), ['id', 'name', 'avatar_path', 'birth_date', 'sex', 'gym_id', 'remote']),
         trainer: pick(person(d, l.trainer_id), ['id', 'name', 'avatar_path', 'plan', 'plan_expires_at']) }))
@@ -176,7 +229,7 @@ export const previewApi = {
     const d = load(), t = activeTrainer(d, row.client_id)
     if (t ? t !== me() : row.client_id !== me()) fail('No tienes permiso para hacer eso')
     const m = { id: uid(), ...row, recorded_by: me(), created_at: now() }
-    d.metrics.push(m); save(d); return ok(m)
+    d.metrics.push(m); notifyClient(d, row.client_id, 'metrics_added'); save(d); return ok(m)
   },
   deleteMetric(id) {
     const d = load(), m = d.metrics.find(x => x.id === id), t = m && activeTrainer(d, m.client_id)
@@ -190,13 +243,31 @@ export const previewApi = {
     d.goals[clientId] = { client_id: clientId, ...g, updated_by: me(), updated_at: now() }; save(d); return ok(d.goals[clientId])
   },
   gymsByIds: ids => ok(load().gyms.filter(g => ids.includes(g.id))),
+  diet: clientId => ok(load().diets?.[clientId] || null),
+  setDiet(clientId, { targets, meals, notes }) {
+    requirePro()
+    const d = load()
+    if (activeTrainer(d, clientId) !== me()) fail('Ese cliente no está vinculado a ti')
+    d.diets ||= {}
+    d.diets[clientId] = { client_id: clientId, trainer_id: me(), targets, meals, notes: String(notes || '').trim() || null, updated_at: now() }
+    notifyClient(d, clientId, 'diet_updated'); save(d); return ok(d.diets[clientId])
+  },
+  deleteDiet(clientId) {
+    requirePro()
+    const d = load()
+    if (activeTrainer(d, clientId) !== me()) fail('Ese cliente no está vinculado a ti')
+    if (d.diets) delete d.diets[clientId]
+    save(d); return ok(null)
+  },
   setLinkFee(linkId, fee) {
+    requirePro()
     const d = load(), l = d.links.find(x => x.id === linkId)
     if (!l || l.trainer_id !== me() || l.status !== 'active') fail('Ese vínculo no es tuyo')
     if (fee != null && !(Number(fee) >= 0)) fail('La mensualidad no puede ser negativa')
     l.monthly_fee = fee == null ? null : Number(fee); save(d); return ok(null)
   },
   registerPayment({ client, amount, period, paid_at, note }) {
+    requirePro()
     const d = load(), l = d.links.find(x => x.client_id === client && x.trainer_id === me() && x.status === 'active')
     if (!l) fail('Ese cliente no está vinculado a ti')
     if (!(Number(amount) >= 0)) fail('El monto no puede ser negativo')
@@ -209,6 +280,7 @@ export const previewApi = {
     d.payments.push(p); save(d); return ok(p)
   },
   deletePayment(id) {
+    requirePro()
     const d = load(), p = d.payments.find(x => x.id === id)
     if (!p || p.trainer_id !== me()) fail('Ese pago no es tuyo')
     d.payments = d.payments.filter(x => x.id !== id); save(d); return ok(null)
