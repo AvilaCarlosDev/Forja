@@ -127,4 +127,4 @@ Alcance: el entrenador Pro arma la dieta de su cliente (comidas del día con ali
 |---|---|---|---|
 | 1 | 8 rojos (SyncBanner, idioma por defecto, media-prefetch) los causaba `frontend/.env.local` (modo vista previa de Forja y CDN de imágenes): `vite.config.js` → `test.env` los anula durante las pruebas | Hecho | la suite ya no depende del `.env.local` de cada máquina |
 | 2 | `CoachChat.demo-failure` fallaba a veces: la importación dinámica del Coach demo no alcanzaba a resolverse en las 20 microtareas de `flush` con la máquina ocupada. La prueba ahora la carga antes (`beforeAll`) | Hecho | 3 corridas sueltas y 2 suites completas en verde |
-| 3 | Suite completa | Hecho | **3308/3308** con Node 22, dos veces; SQL 9/9 archivos OK; build ok |
+| 3 | Suite completa | Hecho | **3308/3308** con Node 22, dos veces; SQL 8/8 archivos OK (0002, 0005–0011); build ok |
