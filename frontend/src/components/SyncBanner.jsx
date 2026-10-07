@@ -4,6 +4,7 @@ import { useStore } from '../store/useStore.js'
 import { DEMO } from '../lib/demo.js'
 import { connectionView, actionLabel, syncNowWithToast, pairAgain, connectServer, signInAgain, useOnline } from './ServerSync.jsx'
 import Icon from './Icon.jsx'
+import { FORJA_AUTH_UI } from '../lib/forja-config.js'
 
 // How long a change may sit unsent while the server is reachable before it is worth a word: the
 // push after an edit, or the one boot owes, lands well within this, and saying "not synced" for
@@ -41,7 +42,10 @@ export default function SyncBanner() {
   const view = connectionView(sync, { online })
   // Signed out on the web, the sign-in screen is the whole app: it hears only that the server
   // ended the session, and that the changes are still here.
-  const show = !DEMO && !onboarding && !!view?.banner && (!!user || guest || status === 'auth') && (status !== 'pending' || waited)
+  // Forja: las cuentas de Forja usan el modo invitado de openGym para los datos del dispositivo;
+  // el aviso "Guest mode — data lives only in this browser" no es para ellas.
+  const forjaGuest = FORJA_AUTH_UI && !user
+  const show = !DEMO && !onboarding && !forjaGuest && !!view?.banner && (!!user || guest || status === 'auth') && (status !== 'pending' || waited)
 
   useLayoutEffect(() => {
     const root = document.documentElement

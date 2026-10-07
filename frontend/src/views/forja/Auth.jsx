@@ -6,6 +6,7 @@ import { useUI } from '../../store/useUI.js'
 import Icon from '../../components/Icon.jsx'
 import { Button } from '../../components/ui.jsx'
 import { Choice } from './parts.jsx'
+import { InstallLink } from './Install.jsx'
 import { BRAND } from '../../lib/brand.js'
 import { validateSignup, parseAuthHash } from '../../lib/forja-auth.js'
 import { auth, getSession, setSession, syncSession, ROLE_LABEL } from '../../lib/forja-session.js'
@@ -326,6 +327,6 @@ function AuthBackdrop() {
 export default function ForjaAuth() {
   return <>
     <AuthBackdrop />
-    <div className="fj-auth-layer"><Screens /></div>
+    <div className="fj-auth-layer"><Screens /><div className="fj-install-wrap"><InstallLink /></div></div>
   </>
 }

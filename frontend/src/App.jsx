@@ -46,6 +46,7 @@ import ForjaOnboarding from './views/forja/Onboarding.jsx'
 import { ClientsHome, ClientDetail } from './views/forja/Clients.jsx'
 import MyCoach from './views/forja/MyCoach.jsx'
 import { useBadge } from './views/forja/badge.js'
+import { InstallBanner } from './views/forja/Install.jsx'
 import { useForjaSession, useForjaProfile } from './lib/forja-session.js'
 import { profileIsComplete } from './lib/forja-profile.js'
 import { FORJA_AUTH_UI } from './lib/forja-config.js'
@@ -190,6 +191,7 @@ function Shell() {
           re-mounts the boundary, so the tab bar is always a way out */}
       <div id="app" className="vfade" key={loc.pathname}>
         <ErrorBoundary>
+          {forjaRole && <InstallBanner />}
           {!authed ? (FORJA_AUTH_UI ? <ForjaAuth /> : <Login />) : needsForjaProfile ? <ForjaOnboarding /> : needsMobileOnboarding ? <MobileOnboarding /> : (
             <Routes>
               <Route path="/home" element={<Home />} />

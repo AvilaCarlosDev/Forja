@@ -61,8 +61,9 @@ export function effectiveLang(S, config, navLangs = browserLangs()) {
   if (!cfg) {
     const seen = cachedDefaultLang()
     // Forja: desplegada como web estática no hay servidor de openGym que dé un idioma por
-    // defecto, así que una copia que nunca eligió sigue al navegador y, si no, va en español.
-    if (seen === null) return FORJA_AUTH_UI ? ((navLangs || []).map(matchLocale).find(Boolean) || 'es') : own
+    // defecto. Forja es en español: una copia que nunca eligió idioma va en español aunque el
+    // navegador esté en otro (un iPhone en inglés mostraba la app en inglés). Se cambia en Ajustes.
+    if (seen === null) return FORJA_AUTH_UI ? 'es' : own
     cfg = { default_lang: seen }
   }
   return autoLang(S, cfg, navLangs) || own
