@@ -36,3 +36,18 @@ Alcance de 2a: registro e inicio de sesión con correo sobre Supabase Auth, con 
 | 8 | 2b: guardar el estado de entrenamiento en Supabase | Pendiente de plan | — |
 
 Pendiente de diseño (pedido el 2026-10-06): elegir entrenador al registrarse y cambiarlo después, gimnasio de cada perfil con lista de Punto Fijo, y métricas corporales que acompañan al cliente al cambiar de entrenador.
+
+## Fase 3.1 — Perfil: foto, fecha de nacimiento y tutor (v0.3.0)
+
+Alcance: completar el perfil la primera vez que se entra — foto de perfil, nombre, sexo y fecha de nacimiento. Menores de 18 no se bloquean: piden el consentimiento de madre, padre o tutor. Edad mínima 13.
+
+| # | Tarea | Estado | Evidencia |
+|---|---|---|---|
+| 1 | Migración `0002_forja_profile_details.sql`: `birth_date`, `avatar_path`, `onboarded_at`, tabla `guardian_consents`, RLS y bucket privado `avatars` | Hecho | commit `62fab29`; pruebas locales 13/13 con PGlite (`supabase/tests/run-local.mjs`) |
+| 2 | Asistente de perfil (`views/forja/Onboarding.jsx`): datos, paso de tutor si es menor, cierre con `forja_finish_onboarding()` | Hecho | `forja-profile.test.js` (reglas de edad y validación); gate en `App.jsx` |
+| 3 | Foto de perfil (`views/forja/Avatar.jsx`): recorte a webp 512 px en el navegador, subida a la carpeta propia, enlace firmado, borra la anterior | Hecho | `forja-db.test.js`; políticas de storage en 0002 |
+| 4 | La base solo deja editar nombre, sexo, fecha y foto; `plan`, `is_admin` y `onboarded_at` blindados | Hecho | pruebas 5 y 6 de `0002_forja_profile_details.test.sql` |
+| 5 | Suite completa y build | Hecho | 3216/3217 (único rojo: `CoachChat.demo-failure`, heredado); `npm run build` ok |
+| 6 | Ejecutar `0002_forja_profile_details.sql` en Supabase real y recorrer el asistente en el navegador | Pendiente, lo hace Carlos | — |
+
+Nota de entorno (2026-10-06): Node 26.8.1 de esta máquina deja `globalThis.localStorage` roto y la suite entera falla (326 rojos falsos). Arreglado con `NODE_OPTIONS=--no-experimental-webstorage` fijado en `mise set -g`; con eso, `npm test` nace verde.
