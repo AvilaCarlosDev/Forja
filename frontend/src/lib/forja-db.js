@@ -61,6 +61,8 @@ export function createDb({ url, key, getToken, refresh, fetch: f = globalThis.fe
       })
       return Array.isArray(rows) ? rows[0] || null : rows
     },
+    // Borra las filas que cumplan el filtro de PostgREST (por ejemplo 'id=eq.1').
+    del: (table, query) => send(rest + table + '?' + query, { method: 'DELETE' }),
     rpc: (fn, args = {}) => send(rest + 'rpc/' + fn, { method: 'POST', body: args }),
     upload: (bucket, path, blob, contentType) => send('/storage/v1/object/' + bucket + '/' + path, {
       method: 'POST', body: blob, raw: true, headers: { 'Content-Type': contentType, 'x-upsert': 'true' },

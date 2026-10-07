@@ -43,6 +43,9 @@ import CoachIntake from './views/CoachIntake.jsx'
 import CoachSetup from './views/CoachSetup.jsx'
 import ForjaAuth from './views/forja/Auth.jsx'
 import ForjaOnboarding from './views/forja/Onboarding.jsx'
+import { ClientsHome, ClientDetail } from './views/forja/Clients.jsx'
+import MyCoach from './views/forja/MyCoach.jsx'
+import { useBadge } from './views/forja/badge.js'
 import { useForjaSession, useForjaProfile } from './lib/forja-session.js'
 import { profileIsComplete } from './lib/forja-profile.js'
 import { FORJA_AUTH_UI } from './lib/forja-config.js'
@@ -169,6 +172,10 @@ function Shell() {
   // y, dentro, la cuenta tiene que haber completado su perfil (fecha de nacimiento, tutor si es menor).
   const forjaProfile = useForjaProfile()
   const needsForjaProfile = FORJA_AUTH_UI && authed && !profileIsComplete(forjaProfile.row)
+  const forjaRole = FORJA_AUTH_UI && authed && !needsForjaProfile ? forjaProfile.row?.role : null
+  const forjaBadge = useBadge()
+  const forjaTab = forjaRole === 'trainer' ? { path: '/clientes', icon: 'person', label: 'Clientes', badge: forjaBadge }
+    : forjaRole === 'client' ? { path: '/mi-coach', icon: 'figureStrength', label: 'Mi coach', badge: forjaBadge } : null
   if (!ready && !authed) return (
     <div id="app">
       <div style={{ paddingTop: '44vh', display: 'flex', justifyContent: 'center', fontSize: 34, color: 'var(--label-3)' }}>
@@ -198,6 +205,9 @@ function Shell() {
               <Route path="/muscles" element={<Muscles />} />
               <Route path="/structural-balance" element={<StructuralBalance />} />
               <Route path="/settings" element={<Settings />} />
+              {forjaRole === 'trainer' && <Route path="/clientes" element={<ClientsHome />} />}
+              {forjaRole === 'trainer' && <Route path="/clientes/:id" element={<ClientDetail />} />}
+              {forjaRole === 'client' && <Route path="/mi-coach" element={<MyCoach />} />}
               {/* The Coach screens gate themselves on the instance config; the routes exist
                   unconditionally so a deep link from a notification lands somewhere sane
                   rather than on the catch-all. */}
@@ -216,7 +226,7 @@ function Shell() {
           including on the sign-in screen, when the server has just ended the session. */}
       <SyncBanner />
       {/* The chat owns the bottom of the screen: its composer sits where the tabs would be. */}
-      {loc.pathname !== '/coach' && !(FORJA_AUTH_UI && (!authed || needsForjaProfile)) && <TabBar onStart={startFlow} />}
+      {loc.pathname !== '/coach' && !(FORJA_AUTH_UI && (!authed || needsForjaProfile)) && <TabBar onStart={startFlow} extra={forjaTab} />}
       <RestTimer />
       <Modals />
       <Toast />

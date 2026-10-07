@@ -9,15 +9,18 @@ import Icon from './Icon.jsx'
 // render, so React saw a different component type each time and threw the button away and built a
 // fresh one — on a bar that is fixed on screen, and once a second for the whole of a rest. The
 // state it took with it is the DOM node itself: focus, the :active tint, any in-flight transition.
-function Tab({ active, icon, label, onClick }) {
+function Tab({ active, icon, label, onClick, badge }) {
   return (
     <button className={active ? 'on' : ''} onClick={onClick}>
       <Icon name={icon} /><span>{label}</span>
+      {badge > 0 && <i className="fj-tab-badge" aria-label={badge + ' sin leer'}>{badge > 9 ? '9+' : badge}</i>}
     </button>
   )
 }
 
-export default function TabBar({ onStart }) {
+// Forja: `extra` ({ path, icon, label, badge }) ocupa el lugar de Ejercicios — Clientes para el
+// entrenador, Mi coach para el cliente. La biblioteca sigue a mano desde el plan y las rutinas.
+export default function TabBar({ onStart, extra }) {
   const nav = useNavigate()
   const loc = useLocation()
   const S = useStore(s => s.S)
@@ -48,7 +51,9 @@ export default function TabBar({ onStart }) {
         <span>{S.active ? (cur === 'workout' ? t('Workout') : S.active.editingWorkoutId ? t('Edit workout') : t('Resume')) : t('Start')}</span>
       </button>
       <Tab active={on('stats')} icon="chart" label={t('Stats')} onClick={() => nav('/stats')} />
-      <Tab active={on('library')} icon="list" label={t('Exercises')} onClick={() => nav('/library')} />
+      {extra
+        ? <Tab active={cur === extra.path.slice(1)} icon={extra.icon} label={extra.label} badge={extra.badge} onClick={() => nav(extra.path)} />
+        : <Tab active={on('library')} icon="list" label={t('Exercises')} onClick={() => nav('/library')} />}
     </nav>
   )
 }

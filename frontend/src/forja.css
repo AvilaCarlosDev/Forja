@@ -44,3 +44,64 @@
   background:var(--surface);color:var(--label);font:inherit;font-size:15px;cursor:pointer}
 .fj-chip.on{border-color:var(--acc);background:var(--acc-soft);color:var(--acc);font-weight:600}
 .fj-chip:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+/* Forja: Clientes, Mi coach, gimnasios y medidas */
+.fj-page{display:flex;flex-direction:column;gap:14px;padding-block:max(16px,var(--sat)) 120px}
+.fj-title{font-size:28px;font-weight:700;letter-spacing:-.02em;margin:4px 0 0}
+.fj-subtitle{font-size:20px;font-weight:700;margin:10px 0 0}
+.fj-card{background:var(--surface);border-radius:var(--r-card);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.fj-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.fj-card-head h3{font-size:17px;font-weight:600;margin:0;display:flex;align-items:center;gap:6px}
+.fj-p{margin:0;font-size:15px;line-height:1.4}
+.fj-badge{background:var(--acc);color:var(--on-acc);border-radius:999px;font-size:12px;font-weight:700;padding:2px 8px}
+.fj-link{background:none;border:0;padding:6px 2px;color:var(--acc);font:inherit;font-size:15px;cursor:pointer;min-height:32px}
+.fj-link.danger{color:var(--red);align-self:flex-start}
+.fj-center{text-align:center;padding:10px}
+.fj-row{display:flex;gap:8px;flex-wrap:wrap}
+.fj-list{display:flex;flex-direction:column;gap:8px;list-style:none;margin:0;padding:0}
+.fj-item{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:10px 12px;border-radius:12px;
+  background:var(--surface-2);border:1.5px solid transparent;color:var(--label);font:inherit;text-align:start;cursor:pointer}
+.fj-card .fj-item{background:var(--bg)}
+.fj-item.on{border-color:var(--acc);background:var(--acc-soft)}
+.fj-item.on>.icn{color:var(--acc)}
+.fj-item.static{cursor:default;padding-inline:0;background:none}
+.fj-item:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.fj-item-m{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.fj-item-m b{font-size:16px;font-weight:600}
+.fj-item-m span{font-size:13px;color:var(--label-2);overflow-wrap:anywhere}
+.fj-item-add{border-style:dashed;border-color:var(--sep)}
+.fj-gyms{display:flex;flex-direction:column;gap:10px}
+.fj-panel-back{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
+.fj-panel{background:var(--bg);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;
+  padding:16px 16px calc(24px + var(--sab));display:flex;flex-direction:column;gap:12px}
+@media (min-width:700px){.fj-panel-back{align-items:center}.fj-panel{border-radius:20px}}
+.fj-panel-head{display:flex;align-items:center;justify-content:space-between}
+.fj-panel-head h2{font-size:20px;margin:0}
+.fj-icon-btn{width:44px;height:44px;flex:none;display:grid;place-items:center;border-radius:50%;border:0;background:var(--surface);color:var(--label);cursor:pointer;font-size:18px}
+.fj-icon-btn:focus-visible,.fj-link:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.fj-logo-pick{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:var(--surface);cursor:pointer;font-size:15px;color:var(--acc)}
+.fj-logo-pick img{width:56px;height:56px;object-fit:contain;border-radius:8px;background:#fff}
+.fj-logo-pick .icn{font-size:24px}
+.fj-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fj-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.fj-stat{background:var(--bg);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.fj-stat span{font-size:12px;color:var(--label-2)}
+.fj-stat b{font-size:20px;font-variant-numeric:tabular-nums}
+.fj-stat b small{font-size:12px;font-weight:500;color:var(--label-2)}
+.fj-history,.fj-notes,.fj-requests{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.fj-history li{display:flex;flex-direction:column;gap:2px;padding:10px 0;border-top:1px solid var(--sep-op);font-size:14px}
+.fj-history li:first-child{border-top:0}
+.fj-history em{color:var(--label-2);font-size:13px}
+.fj-notes li{padding:8px 0;border-top:1px solid var(--sep-op);font-size:15px}
+.fj-notes li:first-child{border-top:0}
+.fj-notes li.new{font-weight:600}
+.fj-notes li.new::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--acc);margin-inline-end:8px;vertical-align:middle}
+.fj-request{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--sep-op)}
+.fj-request:first-child{border-top:0}
+.fj-switch{display:flex;align-items:center;gap:8px}
+.fj-switch select{flex:1;min-width:0;color-scheme:dark light}
+.fj-profile-head{display:flex;align-items:center;gap:14px}
+.fj-profile-head .fj-title{font-size:24px}
+#tabbar button{position:relative}
+.fj-tab-badge{position:absolute;top:0;left:calc(50% + 6px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+  background:var(--red);color:#fff;font-size:11px;font-weight:700;font-style:normal;line-height:18px;text-align:center}
+@media (max-width:360px){.fj-grid2{grid-template-columns:1fr}}

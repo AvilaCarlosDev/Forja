@@ -1,6 +1,6 @@
 // Forja: completar el perfil la primera vez que se entra. Foto, nombre, sexo y fecha de
-// nacimiento; si la persona es menor de 18, el consentimiento de su madre, padre o tutor.
-// Los pasos de gimnasio y entrenador se añaden en las fases siguientes.
+// nacimiento; si la persona es menor de 18, el consentimiento de su madre, padre o tutor; el
+// gimnasio (el entrenador puede elegir varios) y, si es cliente, su entrenador.
 import { useState } from 'react'
 import { useUI } from '../../store/useUI.js'
 import { useStore } from '../../store/useStore.js'
@@ -14,29 +14,13 @@ import {
   MIN_AGE, RELATIONSHIPS, ageOn, needsGuardian, todayISO, validateDetails, validateGuardian, guardianBody,
 } from '../../lib/forja-profile.js'
 import { AvatarPicker } from './Avatar.jsx'
+import GymPicker from './GymPicker.jsx'
+import TrainerPicker from './TrainerPicker.jsx'
+import { Field, Choice } from './parts.jsx'
+import { api } from '../../lib/forja-api.js'
 import '../../forja.css'
 
 const toast = m => useUI.getState().toast(m)
-
-function Field({ id, label, hint, error, children }) {
-  return <div className="fj-field">
-    <label htmlFor={id}>{label}</label>
-    {children}
-    {hint && <div className="dim small">{hint}</div>}
-    {error && <div className="fj-err" role="alert">{error}</div>}
-  </div>
-}
-
-// Opciones excluyentes que solo se marcan al tocarlas. (El Segmented de openGym siempre
-// resalta la primera opción aunque no haya ninguna elegida, y aquí eso confundía.)
-function Choice({ id, options, value, onChange }) {
-  return <div className="fj-chips" role="radiogroup" aria-labelledby={id}>
-    {options.map((o, i) => <button key={o.value} type="button" role="radio" aria-checked={value === o.value}
-      id={i ? undefined : id + '-first'} className={'fj-chip' + (value === o.value ? ' on' : '')} onClick={() => onChange(o.value)}>
-      {o.label}
-    </button>)}
-  </div>
-}
 
 const SEX_OPTIONS = [{ value: 'male', label: 'Hombre' }, { value: 'female', label: 'Mujer' }]
 
@@ -134,6 +118,53 @@ function Guardian({ back, next }) {
   </form>
 }
 
+function GymStep({ row, next }) {
+  const trainer = row.role === 'trainer'
+  const [gym, setGym] = useState(trainer ? [] : row.gym_id || null)
+  const [remote, setRemote] = useState(!!row.remote)
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+  const save = async () => {
+    setErr('')
+    if (trainer ? !gym.length && !remote : !gym && !remote) {
+      setErr(trainer ? 'Elige al menos un gimnasio donde trabajas, o marca que entrenas a distancia' : 'Elige tu gimnasio o marca que entrenas en casa')
+      return
+    }
+    setBusy(true)
+    try {
+      if (trainer) await api().setTrainerGyms(gym, remote)
+      else await api().setClientGym(gym, remote && !gym)
+      next()
+    } catch (x) { setErr(x.message) }
+    finally { setBusy(false) }
+  }
+  return <div className="fj-form">
+    <div className="fj-legend">{trainer ? '¿En qué gimnasios trabajas? Puedes elegir varios.' : '¿En qué gimnasio entrenas?'}</div>
+    <GymPicker multi={trainer} value={gym} remote={remote}
+      onChange={(v, r) => { setGym(v); setRemote(!!r); setErr('') }} />
+    {err && <div className="fj-err" role="alert">{err}</div>}
+    <Button variant="primary" type="button" disabled={busy} onClick={save}>{busy ? 'Guardando…' : 'Continuar'}</Button>
+  </div>
+}
+
+function TrainerStep({ row, next }) {
+  const [has, setHas] = useState('')
+  return <div className="fj-form">
+    <div className="fj-field">
+      <div className="fj-legend" id="fj-ob-has">¿Tienes entrenador personal?</div>
+      <Choice id="fj-ob-has" options={[{ value: 'yes', label: 'Sí, tengo' }, { value: 'no', label: 'No tengo' }]} value={has} onChange={setHas} />
+    </div>
+    {has === 'yes' && <TrainerPicker gymId={row.gym_id} remote={!row.gym_id && row.remote}
+      onRequested={(l, t) => { toast('Solicitud enviada a ' + t.name); next() }} />}
+    {has === 'no' && <>
+      <div className="fj-note">Usarás {BRAND} con acceso básico: tus rutinas, tu peso y tus medidas. Cuando tengas entrenador, lo eliges desde «Mi coach».</div>
+      <Button variant="primary" type="button" onClick={next}>Continuar sin entrenador</Button>
+    </>}
+  </div>
+}
+
+const STEP_TITLE = { details: 'Tus datos', guardian: 'Permiso de tu tutor', gym: 'Tu gimnasio', trainer: 'Tu entrenador' }
+
 export default function ForjaOnboarding() {
   const { status, row, error } = useForjaProfile()
   const [step, setStep] = useState('details')
@@ -149,15 +180,19 @@ export default function ForjaOnboarding() {
     try { const r = await finishOnboarding(); toast('¡Listo, ' + (r?.name || row.name) + '! Tu perfil está completo') }
     catch (x) { setErr(x.message) }
   }
-  const total = minor ? 2 : 1
+  const steps = ['details', ...(minor ? ['guardian'] : []), 'gym', ...(row.role === 'client' ? ['trainer'] : [])]
+  const at = steps.indexOf(step) + 1
+  const go = cur => { const n = steps[steps.indexOf(cur) + 1]; if (n) setStep(n); else finish() }
   return <div className="narrow fj-auth fj-onboarding">
     <div className="fj-brand">
       <h1>Completa tu perfil</h1>
-      <div className="muted">{ROLE_LABEL[row.role] || 'Cliente'} · paso {step === 'details' ? 1 : 2} de {total}</div>
+      <div className="muted">{ROLE_LABEL[row.role] || 'Cliente'} · paso {at} de {steps.length} · {STEP_TITLE[step]}</div>
     </div>
-    <Steps at={step === 'details' ? 1 : 2} total={total} />
-    {step === 'details' && <Details row={row} next={isMinor => { setMinor(isMinor); if (isMinor) setStep('guardian'); else finish() }} />}
-    {step === 'guardian' && <Guardian back={() => setStep('details')} next={finish} />}
+    <Steps at={at} total={steps.length} />
+    {step === 'details' && <Details row={row} next={isMinor => { setMinor(isMinor); setStep(isMinor ? 'guardian' : 'gym') }} />}
+    {step === 'guardian' && <Guardian back={() => setStep('details')} next={() => setStep('gym')} />}
+    {step === 'gym' && <GymStep row={row} next={() => go('gym')} />}
+    {step === 'trainer' && <TrainerStep row={row} next={finish} />}
     {err && <div className="fj-err" role="alert">{err}</div>}
   </div>
 }
