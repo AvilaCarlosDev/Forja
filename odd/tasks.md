@@ -153,4 +153,4 @@ Informe: `~/cyber-neo-report-Forja-orquestador-2026-10-07.md`.
 | 3 | Casilla obligatoria de términos y privacidad en «Entrar»; Google/Apple no salen sin ella (también en «Crear cuenta») | Hecho | `Auth.terms.test.jsx` 5/5; captura |
 | 4 | CN-003: `0013_forja_perfil_privado.sql`, lectura de `profiles` por columna (sin `is_admin`, `terms_accepted_at`, `role_chosen` ni fechas internas); la fila propia por `forja_me()` | Hecho | `0013_forja_perfil_privado.test.sql` **8/8** (4/8 sin el revoke); `forja-session.test.js` 3/3 |
 | 5 | Suite y build | Hecho | **3337/3337**; SQL 10/10 archivos; build ok |
-| 6 | Ejecutar 0008–0013 en Supabase real y `vercel --prod` | Pendiente, con OK de Carlos | — |
+| 6 | Ejecutar 0008–0013 en Supabase real y `vercel --prod` | Hecho | pruebas en producción: 0008 8/8, 0009 11/11, 0010 6/6, 0011 9/9, 0012 10/10, 0013 8/8; forja-trainer.vercel.app con CSP, sin sesiones demo (404), service worker activo |
