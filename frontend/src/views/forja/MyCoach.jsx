@@ -5,7 +5,7 @@ import { Button } from '../../components/ui.jsx'
 import Icon from '../../components/Icon.jsx'
 import { api } from '../../lib/forja-api.js'
 import { useForjaProfile } from '../../lib/forja-session.js'
-import { effectivePlan, linkSummary, notificationText, gymLabel, clientCanEditMetrics } from '../../lib/forja-coach.js'
+import { effectivePlan, linkSummary, notificationText, gymLabel, clientCanEditMetrics, paymentStatus, PAYMENT_LABEL, monthName, money } from '../../lib/forja-coach.js'
 import { useUI } from '../../store/useUI.js'
 import { Avatar } from './Avatar.jsx'
 import GymPicker from './GymPicker.jsx'
@@ -43,6 +43,7 @@ export default function MyCoach() {
   const { row } = useForjaProfile()
   const links = useLoad(() => api().myLinks(), [])
   const notes = useLoad(() => api().notifications(), [])
+  const pays = useLoad(() => api().myPayments(), [])
   const gym = useLoad(() => row?.gym_id ? api().gymsByIds([row.gym_id]) : [], [row?.gym_id])
   const [panel, setPanel] = useState(null)
   const unread = (notes.data || []).filter(n => !n.read_at)
@@ -80,7 +81,8 @@ export default function MyCoach() {
       {links.error && <ErrorNote error={links.error} retry={reload} />}
       {active && <div className="fj-item static">
         <Avatar path={active.trainer?.avatar_path} name={active.trainer?.name} size={44} />
-        <span className="fj-item-m"><b>{active.trainer?.name}</b><span>Tu entrenador · plan {trainerPro ? 'Pro' : 'Free'}</span></span>
+        <span className="fj-item-m"><b>{active.trainer?.name || 'Tu entrenador'}</b>
+          <span>{active.trainer?.name ? `Tu entrenador · plan ${trainerPro ? 'Pro' : 'Free'}` : `Plan ${trainerPro ? 'Pro' : 'Free'}`}</span></span>
       </div>}
       {pending && <div className="fj-note">
         Esperando que <b>{pending.trainer?.name}</b> acepte tu solicitud.{active ? ' Mientras tanto sigues con tu entrenador actual.' : ''}
@@ -90,12 +92,33 @@ export default function MyCoach() {
         <p className="dim small">No tienes entrenador: usas la app con acceso básico.</p>
         <Button variant="primary" type="button" onClick={() => setPanel('trainer')}>Elegir entrenador</Button>
       </>}
-      {active && <button type="button" className="fj-link danger" onClick={leave}>Dejar de entrenar con {active.trainer?.name}</button>}
+      {active && <button type="button" className="fj-link danger" onClick={leave}>Dejar de entrenar con {active.trainer?.name || 'este entrenador'}</button>}
     </section>
+
+    {active && pays.data && (() => {
+      const mine = pays.data.filter(p => p.client_id === row.id)
+      if (active.monthly_fee == null && !mine.length) return null
+      const status = paymentStatus(mine)
+      const last = mine[0]?.period
+      return <section className="fj-card">
+        <div className="fj-card-head">
+          <h3>Mensualidad</h3>
+          <span className={'fj-status ' + status}>{PAYMENT_LABEL[status]}</span>
+        </div>
+        <p className="fj-p">
+          {active.monthly_fee != null ? `${money(active.monthly_fee)} al mes` : ''}
+          {last ? `${active.monthly_fee != null ? ' · ' : ''}último pago: ${monthName(last)} ${last.slice(0, 4)}`
+            : `${active.monthly_fee != null ? ' · ' : ''}sin pagos registrados`}
+        </p>
+        {status !== 'al_dia' && <p className="dim small">Cuando pagues, tu entrenador lo registra aquí y queda al día.</p>}
+      </section>
+    })()}
 
     <h2 className="fj-subtitle">Mis medidas y avances</h2>
     <Metrics clientId={row.id} canEdit={clientCanEditMetrics(active)} pro={trainerPro}
-      readOnlyNote={active ? `Las carga y corrige ${active.trainer?.name}, tu entrenador. Aquí las ves en solo lectura.` : null} />
+      readOnlyNote={active ? (active.trainer?.name
+        ? `Las carga y corrige ${active.trainer.name}, tu entrenador. Aquí las ves en solo lectura.`
+        : 'Las carga tu entrenador. Aquí las ves en solo lectura.') : null} />
 
     {panel === 'gym' && <ChangeGym row={row} onClose={() => { setPanel(null); gym.reload() }} />}
     {panel === 'trainer' && <Panel title={active ? 'Cambiar de entrenador' : 'Elegir entrenador'} onClose={() => setPanel(null)}>

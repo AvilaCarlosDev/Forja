@@ -64,7 +64,10 @@ export function ClientsHome() {
   const active = mine.filter(l => l.status === 'active')
   const full = !pro && active.length >= FREE_CLIENT_LIMIT
   return <div className="narrow fj-page">
-    <h1 className="fj-title">Clientes</h1>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+      <h1 className="fj-title">Clientes</h1>
+      <Button variant="tinted" size="sm" type="button" onClick={() => nav('/finanzas')}>Finanzas</Button>
+    </div>
     {notes.data && <Notifications items={notes.data} onSeen={() => api().markRead().then(() => { notes.reload(); refreshBadge() })} />}
     {links.loading && !links.data && <Loading />}
     {links.error && <ErrorNote error={links.error} retry={reload} />}

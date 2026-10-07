@@ -44,6 +44,7 @@ import CoachSetup from './views/CoachSetup.jsx'
 import ForjaAuth from './views/forja/Auth.jsx'
 import ForjaOnboarding from './views/forja/Onboarding.jsx'
 import { ClientsHome, ClientDetail } from './views/forja/Clients.jsx'
+import Finanzas from './views/forja/Finanzas.jsx'
 import MyCoach from './views/forja/MyCoach.jsx'
 import { useBadge } from './views/forja/badge.js'
 import { InstallBanner } from './views/forja/Install.jsx'
@@ -209,6 +210,7 @@ function Shell() {
               <Route path="/settings" element={<Settings />} />
               {forjaRole === 'trainer' && <Route path="/clientes" element={<ClientsHome />} />}
               {forjaRole === 'trainer' && <Route path="/clientes/:id" element={<ClientDetail />} />}
+              {forjaRole === 'trainer' && <Route path="/finanzas" element={<Finanzas />} />}
               {forjaRole === 'client' && <Route path="/mi-coach" element={<MyCoach />} />}
               {/* The Coach screens gate themselves on the instance config; the routes exist
                   unconditionally so a deep link from a notification lands somewhere sane

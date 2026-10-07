@@ -139,3 +139,46 @@ export function progress(rows = []) {
   }
   return res
 }
+
+// ---- Finanzas ----------------------------------------------------------------------------------
+
+// Mes local 'YYYY-MM' (sin pasar por UTC: en Venezuela, de noche, UTC ya es mañana).
+export const monthKey = (d = new Date()) => {
+  const p = n => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}`
+}
+
+export const prevMonthKey = key => {
+  const [y, m] = key.split('-').map(Number)
+  return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`
+}
+
+const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+export const monthName = key => MONTHS[Number(key.slice(5, 7)) - 1]
+export const money = n => '$' + Number(n || 0).toLocaleString('es-VE', { maximumFractionDigits: 2 })
+
+export const PAYMENT_LABEL = { al_dia: 'Al día', pendiente: 'Pendiente', vencido: 'Vencido' }
+
+// Estado de la mensualidad de un cliente con sus pagos (ya filtrados a ese cliente):
+// al día = pagó el mes en curso; pendiente = aún no se le cobra este mes; vencido = su
+// último pago tiene dos meses o más.
+export function paymentStatus(payments = [], today = new Date()) {
+  const key = monthKey(today)
+  const periods = payments.map(p => p.period)
+  if (periods.includes(key)) return 'al_dia'
+  if (!periods.length) return 'pendiente'
+  return periods.slice().sort().at(-1) >= prevMonthKey(key) ? 'pendiente' : 'vencido'
+}
+
+// Tablero del entrenador: fila por cliente activo con su estado, más lo cobrado y por
+// cobrar del mes en curso.
+export function financeSummary(links = [], payments = [], today = new Date()) {
+  const key = monthKey(today)
+  const rows = links.filter(l => l.status === 'active').map(l => {
+    const mine = payments.filter(p => p.client_id === l.client_id)
+    return { link: l, status: paymentStatus(mine, today), last: mine.map(p => p.period).sort().at(-1) || null }
+  })
+  const income = payments.filter(p => p.period === key).reduce((s, p) => s + Number(p.amount || 0), 0)
+  const due = rows.filter(r => r.status !== 'al_dia').reduce((s, r) => s + Number(r.link.monthly_fee || 0), 0)
+  return { rows, income, due, vencidos: rows.filter(r => r.status === 'vencido').length, month: key }
+}

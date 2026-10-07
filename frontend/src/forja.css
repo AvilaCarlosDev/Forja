@@ -147,3 +147,14 @@
 .fj-oauth-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .fj-or{display:flex;align-items:center;gap:10px;color:var(--label-2);font-size:13px}
 .fj-or::before,.fj-or::after{content:'';flex:1;height:1px;background:var(--sep)}
+
+/* Forja · finanzas */
+.fj-stats{display:flex;gap:10px}
+.fj-stat{flex:1;min-width:0;background:var(--surface);border-radius:var(--r-card);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.fj-stat b{font-size:20px;letter-spacing:-.02em}
+.fj-status{border-radius:999px;font-size:12px;font-weight:700;padding:2px 8px;white-space:nowrap;align-self:center}
+.fj-status.al_dia{background:rgba(63,191,111,.16);color:#3fbf6f}
+.fj-status.pendiente{background:rgba(232,163,61,.16);color:#e8a33d}
+.fj-status.vencido{background:rgba(255,84,84,.16);color:var(--red)}
+.fj-list>li{display:flex;flex-direction:column;gap:6px}
+.fj-pay-row{margin:0 2px 4px}

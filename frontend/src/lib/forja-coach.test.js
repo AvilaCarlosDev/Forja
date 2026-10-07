@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   gymLabel, normalizeSocial, validateGymSuggestion, filterGyms, effectivePlan, clientCanEditMetrics,
   linkSummary, notificationText, metricRow, bmi, latestValues, progress, FREE_CLIENT_LIMIT,
+  monthKey, prevMonthKey, monthName, paymentStatus, financeSummary,
 } from './forja-coach.js'
 
 const gyms = [
@@ -118,5 +119,51 @@ describe('metrics', () => {
       weight_kg: { first: 72, last: 68.5, diff: -3.5 },
       body_fat_pct: { first: 30, last: 27.5, diff: -2.5 },
     })
+  })
+})
+
+describe('finanzas', () => {
+  const now = new Date('2026-10-05T12:00:00')
+
+  it('knows the month keys', () => {
+    expect(monthKey(now)).toBe('2026-10')
+    expect(prevMonthKey('2026-10')).toBe('2026-09')
+    expect(prevMonthKey('2026-01')).toBe('2025-12')
+    expect(monthName('2026-10')).toBe('octubre')
+  })
+
+  it('marks the client who paid this month as al día', () => {
+    expect(paymentStatus([{ period: '2026-10' }], now)).toBe('al_dia')
+  })
+
+  it('marks last month as pendiente and older as vencido', () => {
+    expect(paymentStatus([{ period: '2026-09' }], now)).toBe('pendiente')
+    expect(paymentStatus([{ period: '2026-08' }], now)).toBe('vencido')
+  })
+
+  it('treats a client who never paid as pendiente, not vencido', () => {
+    expect(paymentStatus([], now)).toBe('pendiente')
+  })
+
+  it('resumes income, what is owed and the overdue clients of the month', () => {
+    const links = [
+      { id: 'l1', status: 'active', client_id: 'a', monthly_fee: 30 },
+      { id: 'l2', status: 'active', client_id: 'b', monthly_fee: 25 },
+      { id: 'l3', status: 'active', client_id: 'c', monthly_fee: null },
+      { id: 'l4', status: 'ended', client_id: 'd', monthly_fee: 40 },
+    ]
+    const payments = [
+      { client_id: 'a', period: '2026-10', amount: 30 },
+      { client_id: 'b', period: '2026-07', amount: 25 },
+    ]
+    const s = financeSummary(links, payments, now)
+    expect(s.month).toBe('2026-10')
+    expect(s.income).toBe(30)
+    expect(s.rows).toHaveLength(3) // solo los activos
+    expect(s.rows[0].status).toBe('al_dia')
+    expect(s.rows[1].status).toBe('vencido')
+    expect(s.rows[2].status).toBe('pendiente')
+    expect(s.due).toBe(25) // el de30 ya pagó; sin monto no suma
+    expect(s.vencidos).toBe(1)
   })
 })

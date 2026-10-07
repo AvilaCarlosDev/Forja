@@ -43,6 +43,12 @@ export const remoteApi = {
   requestTrainer: trainerId => db.rpc('forja_request_trainer', { p_trainer: trainerId }),
   respondLink: (linkId, accept) => db.rpc('forja_respond_link', { p_link: linkId, p_accept: accept }),
   leaveTrainer: () => db.rpc('forja_leave_trainer'),
+  setLinkFee: (linkId, fee) => db.rpc('forja_set_link_fee', { p_link: linkId, p_fee: fee }),
+  registerPayment: p => db.rpc('forja_register_payment', {
+    p_client: p.client, p_amount: p.amount, p_period: p.period, p_paid_at: p.paid_at, p_note: p.note || null,
+  }),
+  deletePayment: id => db.rpc('forja_delete_payment', { p_id: id }),
+  myPayments: () => db.select('payments', `select=*&or=(trainer_id.eq.${me()},client_id.eq.${me()})&order=period.desc,paid_at.desc`),
   myLinks: () => db.select('coach_links', `select=${encodeURIComponent(LINK_SELECT)}&or=(client_id.eq.${me()},trainer_id.eq.${me()})&status=in.(pending,active)&order=requested_at.desc`),
   notifications: () => db.select('notifications', 'select=*&order=created_at.desc&limit=30'),
   markRead: () => db.update('notifications', { user_id: me() }, { read_at: new Date().toISOString() }),
@@ -77,10 +83,11 @@ function load() {
   let d = null
   try { d = JSON.parse(localStorage.getItem(KEY) || 'null') } catch { /* nada */ }
   if (!d) {
-    d = { gyms: SEED_GYMS, people: SEED_PEOPLE, trainerGyms: {}, links: [], notifications: [], metrics: [], goals: {} }
+    d = { gyms: SEED_GYMS, people: SEED_PEOPLE, trainerGyms: {}, links: [], notifications: [], metrics: [], goals: {}, payments: [] }
     for (const p of SEED_PEOPLE) if (p.gyms) d.trainerGyms[p.id] = p.gyms
     d.metrics.push({ id: uid(), client_id: 'c-demo-1', recorded_by: 'c-demo-1', measured_on: '2026-09-01', weight_kg: 64, height_cm: 162, measurements: {}, created_at: now() })
   }
+  d.payments ||= [] // dbs guardados antes de las finanzas
   return d
 }
 function save(d) { try { localStorage.setItem(KEY, JSON.stringify(d)) } catch { /* sin almacenamiento */ } }
@@ -183,6 +190,34 @@ export const previewApi = {
     d.goals[clientId] = { client_id: clientId, ...g, updated_by: me(), updated_at: now() }; save(d); return ok(d.goals[clientId])
   },
   gymsByIds: ids => ok(load().gyms.filter(g => ids.includes(g.id))),
+  setLinkFee(linkId, fee) {
+    const d = load(), l = d.links.find(x => x.id === linkId)
+    if (!l || l.trainer_id !== me() || l.status !== 'active') fail('Ese vínculo no es tuyo')
+    if (fee != null && !(Number(fee) >= 0)) fail('La mensualidad no puede ser negativa')
+    l.monthly_fee = fee == null ? null : Number(fee); save(d); return ok(null)
+  },
+  registerPayment({ client, amount, period, paid_at, note }) {
+    const d = load(), l = d.links.find(x => x.client_id === client && x.trainer_id === me() && x.status === 'active')
+    if (!l) fail('Ese cliente no está vinculado a ti')
+    if (!(Number(amount) >= 0)) fail('El monto no puede ser negativo')
+    if (!/^\d{4}-\d{2}$/.test(period || '')) fail('Periodo inválido: usa AAAA-MM')
+    const today = new Date().toISOString().slice(0, 10)
+    if (!paid_at || paid_at > today) fail('La fecha de pago no puede estar en el futuro')
+    if (period > paid_at.slice(0, 7)) fail('El periodo no puede ser posterior a la fecha de pago')
+    const p = { id: uid(), client_id: client, trainer_id: me(), amount: Number(amount), period, paid_at,
+      note: String(note || '').trim() || null, created_at: now() }
+    d.payments.push(p); save(d); return ok(p)
+  },
+  deletePayment(id) {
+    const d = load(), p = d.payments.find(x => x.id === id)
+    if (!p || p.trainer_id !== me()) fail('Ese pago no es tuyo')
+    d.payments = d.payments.filter(x => x.id !== id); save(d); return ok(null)
+  },
+  myPayments() {
+    const d = load()
+    return ok(d.payments.filter(p => p.trainer_id === me() || p.client_id === me())
+      .sort((a, b) => b.period.localeCompare(a.period) || String(b.paid_at).localeCompare(String(a.paid_at))))
+  },
 }
 
 // Igual que la API real: los errores llegan como promesa rechazada, nunca como excepción directa.
