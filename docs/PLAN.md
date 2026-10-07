@@ -179,3 +179,13 @@ Por orden, lo que desbloquea más trabajo primero.
 - **Cobro desde Venezuela**: sin pasarela automática por ahora.
 - **Tests heredados intermitentes**: `CoachChat.demo-failure` y `useStore.media` fallan en algunas corridas con el mismo código. Sin diagnosticar.
 - **Idioma**: la app aún arranca en inglés en algunos navegadores; el español se elige en Ajustes. Por corregir.
+
+## 9. Correcciones aprobadas por Carlos (2026-10-06)
+
+Enmiendas sobre este plan, posteriores a su aprobación:
+
+1. **3.1 — Perfil**: la foto de perfil se hace ya (hecho: rama `forja/3.1-perfil`, commit `62fab29`, pendiente de ejecutar `0002` en Supabase). Los menores de 18 **no se bloquean**: registran el consentimiento de madre, padre o tutor (edad mínima 13). Verificación por correo del tutor queda para cuando haya SMTP propio; hasta entonces, menores sin consentimiento verificado **sin fotos de progreso**.
+2. **3.2 — Gimnasios**: si el gimnasio no está, panel "Mi gimnasio no está" → nombre + red social (para validar existencia) o foto del logo, a `gym_suggestions`; el panel de admin de gimnasios se **adelanta a esta fase** y el admin valida contra IG/X. Falcon Gym entra solo con una fuente que lo ubique en Punto Fijo.
+3. **D0 — Video de entrada**: el generador elegido es **BUZZY** con los créditos de la cuenta, y **Carlos aprueba cada prompt antes de gastar**. Auditoría hecha en `docs/design/login-video.md`: 10 créditos < 1 s de video; lo gratis sale con marca de agua y licencia **no comercial** → para la v1, **video stock** (Mixkit/Pexels, comercial y sin marca). BUZZY postergado.
+4. **Módulo Feed (estilo X/Threads)**: fase futura post-v1.0 con spec aparte (`@usernames`, posts con clips/fotos). El storage de avatares se diseña reutilizable para ese feed.
+5. **Precios**: Pro **US$15/mes** o **US$10/mes anual (US$120/año)**; activación manual del Pro en el MVP, Stripe después.
