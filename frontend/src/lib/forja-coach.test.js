@@ -208,3 +208,11 @@ describe('forja-coach — clientes por gimnasio', () => {
     expect(gymOptions(gyms, links.slice(0, 3)).map(o => o.value)).toEqual(['g-a', 'g-b', 'all'])
   })
 })
+
+describe('forja-coach — avisos del coach al cliente', () => {
+  it('names the coach in what was sent', () => {
+    expect(notificationText({ kind: 'diet_updated', actor_name: 'Andrea' })).toBe('Andrea te envió tu dieta')
+    expect(notificationText({ kind: 'metrics_added', actor_name: 'Andrea' })).toBe('Andrea cargó tus nuevas medidas')
+    expect(notificationText({ kind: 'routine_assigned' })).toBe('Tu coach te asignó una rutina')
+  })
+})

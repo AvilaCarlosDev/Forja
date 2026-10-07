@@ -218,7 +218,9 @@ function file(title, store) {
   const diets = { [me]: diet(me, coach, { kcal: 1700, protein: 135, carbs: 185, fat: 45 }, CUT_F,
     'Toma 2 L de agua al día. Si entrenas de noche, pasa la merienda de la tarde a después del entreno.', 15) }
   const notifications = [
-    { id: id('n'), user_id: me, kind: 'link_accepted', link_id: l.id, actor_id: coach, actor_name: 'Andrea Rojas (demo)', created_at: stamp(daysAgo(85)), read_at: stamp(daysAgo(85)) },
+    { id: id('n'), user_id: me, kind: 'metrics_added', link_id: l.id, actor_id: coach, actor_name: 'Andrea Rojas (demo)', created_at: stamp(daysAgo(0)), read_at: null },
+    { id: id('n'), user_id: me, kind: 'diet_updated', link_id: l.id, actor_id: coach, actor_name: 'Andrea Rojas (demo)', created_at: stamp(daysAgo(1)), read_at: null },
+    { id: id('n'), user_id: me, kind: 'link_accepted', link_id: l.id, actor_id: coach, actor_name: 'Andrea Rojas (demo)', created_at: stamp(daysAgo(24 * 7)), read_at: stamp(daysAgo(24 * 7)) },
   ]
   const profile = { id: me, name: 'Lucía Demo', sex: 'female', role: 'client', plan: 'free', birth_date: '1996-03-14', gym_id: 'g-gs-sambil', remote: false, onboarded_at: stamp(daysAgo(86)) }
   writeFileSync(join(out, 'sesion-cliente.js'), file('Lucía Demo (clienta)', {

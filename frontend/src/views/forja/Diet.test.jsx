@@ -149,6 +149,14 @@ describe('Forja — dieta (cliente y plan Free)', () => {
     expect(saved().notes).toBe('2 L de agua al día') // no se pierde al bajar a Free
   })
 
+  it('saving the diet tells the client once a day while unread (0010)', async () => {
+    await start()
+    await act(async () => { await api().setDiet('c-demo-1', SAMPLE); await api().setDiet('c-demo-1', SAMPLE) })
+    const notes = JSON.parse(localStorage.getItem('forja_preview_db_v1')).notifications.filter(n => n.user_id === 'c-demo-1' && n.kind === 'diet_updated')
+    expect(notes).toHaveLength(1)
+    expect(notes[0].actor_id).toBe('preview')
+  })
+
   it('only the active trainer of the client can write it', async () => {
     await start()
     await act(async () => {

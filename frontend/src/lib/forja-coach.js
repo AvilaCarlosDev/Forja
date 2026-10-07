@@ -66,6 +66,9 @@ export const NOTIFICATION_TEXT = {
   link_rejected: n => `${n.actor_name || 'El entrenador'} no aceptó tu solicitud`,
   link_ended: n => `${n.actor_name || 'Un cliente'} ya no entrena contigo`,
   link_cancelled: n => `${n.actor_name || 'Un cliente'} retiró su solicitud`,
+  diet_updated: n => `${n.actor_name || 'Tu coach'} te envió tu dieta`,
+  metrics_added: n => `${n.actor_name || 'Tu coach'} cargó tus nuevas medidas`,
+  routine_assigned: n => `${n.actor_name || 'Tu coach'} te asignó una rutina`,
 }
 export const notificationText = n => (NOTIFICATION_TEXT[n?.kind] || (() => 'Novedad en tu cuenta'))(n || {})
 

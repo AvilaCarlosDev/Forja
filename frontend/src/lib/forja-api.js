@@ -102,6 +102,14 @@ const fail = m => { throw new Error(m) }
 // Igual que forja_require_pro() en 0008: finanzas y dietas solo se escriben con el plan Pro vigente.
 const requirePro = () => { if (effectivePlan(getProfile().row || {}) !== 'pro') fail('Es una función Pro. Pásate a Pro para usarla.') }
 const notify = (d, user_id, kind, link_id, actor) => d.notifications.unshift({ id: uid(), user_id, kind, link_id, actor_id: actor, actor_name: person(d, actor)?.name, created_at: now(), read_at: null })
+// Igual que forja_notify_client() en 0010: el entrenador que envía algo avisa al cliente, sin
+// repetir un aviso igual que siga sin leer en el día.
+function notifyClient(d, clientId, kind) {
+  if (clientId === me()) return
+  const today = now().slice(0, 10)
+  if (d.notifications.some(n => n.user_id === clientId && n.kind === kind && n.actor_id === me() && !n.read_at && n.created_at.slice(0, 10) === today)) return
+  notify(d, clientId, kind, d.links.find(l => l.client_id === clientId && l.trainer_id === me() && l.status === 'active')?.id || null, me())
+}
 const activeTrainer = (d, clientId) => d.links.find(l => l.client_id === clientId && l.status === 'active')?.trainer_id || null
 
 // En la vista previa, el entrenador de prueba recibe una solicitud de "María Demo" para ver ese lado.
@@ -181,7 +189,7 @@ export const previewApi = {
     const d = load(), t = activeTrainer(d, row.client_id)
     if (t ? t !== me() : row.client_id !== me()) fail('No tienes permiso para hacer eso')
     const m = { id: uid(), ...row, recorded_by: me(), created_at: now() }
-    d.metrics.push(m); save(d); return ok(m)
+    d.metrics.push(m); notifyClient(d, row.client_id, 'metrics_added'); save(d); return ok(m)
   },
   deleteMetric(id) {
     const d = load(), m = d.metrics.find(x => x.id === id), t = m && activeTrainer(d, m.client_id)
@@ -202,7 +210,7 @@ export const previewApi = {
     if (activeTrainer(d, clientId) !== me()) fail('Ese cliente no está vinculado a ti')
     d.diets ||= {}
     d.diets[clientId] = { client_id: clientId, trainer_id: me(), targets, meals, notes: String(notes || '').trim() || null, updated_at: now() }
-    save(d); return ok(d.diets[clientId])
+    notifyClient(d, clientId, 'diet_updated'); save(d); return ok(d.diets[clientId])
   },
   deleteDiet(clientId) {
     requirePro()

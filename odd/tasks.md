@@ -96,3 +96,15 @@ Alcance: el entrenador Pro arma la dieta de su cliente (comidas del día con ali
 | 4 | Sesiones demo con dietas (María, José y Lucía) | Hecho | `scripts/forja-demo-sessions.mjs` |
 | 5 | Suite y build | Hecho | 3283/3292 (los 9 rojos de `.env.local`, ver 0008); build ok |
 | 6 | Ejecutar 0008 y 0009 con sus pruebas en Supabase real | Pendiente | — |
+
+## v0.9.0 — Finanzas Pro, dietas, gráficas, clientes por gimnasio y avisos (2026-10-07)
+
+| # | Tarea | Estado | Evidencia |
+|---|---|---|---|
+| 1 | Gráfica de evolución por medida (Pro), con la meta de peso | Hecho | `forja-coach.test.js` (`metricSeries`, `chartableMetrics`); recorrido en el navegador |
+| 2 | Sesiones demo con meses de historia (6 meses María, 4 José, 5 Ana, 6 Lucía) y curvas reales | Hecho | `scripts/forja-demo-sessions.mjs` |
+| 3 | Dieta: grilla de íconos por categoría, porciones rápidas, plantillas (déficit, mantenimiento, volumen), copiar de otro cliente, íconos también en la vista del cliente | Hecho | `forja-diet.test.js` 12/12, `Diet.test.jsx` 7/7 |
+| 4 | Fase 1 de `docs/plan-coach-controla.md`: «Estoy en…» filtra los clientes por gimnasio | Hecho | `forja-coach.test.js` (`clientsAtGym`, `gymOptions`); navegador |
+| 5 | Fase 2: `0010_forja_avisos.sql`, avisos al cliente al guardar su dieta o cargarle medidas (sin repetir en el día si no leyó) | Hecho | `0010_forja_avisos.test.sql` **6/6** en PGlite; 0002–0009 siguen verdes |
+| 6 | Suite y build | Hecho | 3293/3302 (los 9 rojos de `.env.local`); build ok |
+| 7 | Ejecutar 0008, 0009 y 0010 en Supabase real y `vercel --prod` | Pendiente, con OK de Carlos | — |
