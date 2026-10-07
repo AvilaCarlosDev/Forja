@@ -24,3 +24,18 @@
 .fj-note{background:var(--surface);border-radius:var(--r-card);padding:12px 14px;font-size:13px;line-height:1.4;color:var(--label-2);text-align:start}
 .fj-note.warn{border-inline-start:3px solid var(--orange)}
 @media (max-width:360px){.fj-roles{grid-template-columns:1fr}}
+/* Completar el perfil y foto */
+.fj-onboarding{justify-content:flex-start;padding-top:max(24px,var(--sat))}
+.fj-steps{display:flex;gap:6px;justify-content:center}
+.fj-steps span{height:4px;flex:0 1 48px;border-radius:2px;background:var(--surface)}
+.fj-steps span.on{background:var(--acc)}
+.fj-avatar{--s:72px;width:var(--s);height:var(--s);border-radius:50%;overflow:hidden;flex:none;display:inline-grid;place-items:center;
+  background:var(--acc-soft);color:var(--acc);font-weight:700;font-size:calc(var(--s) * .36)}
+.fj-avatar img{width:100%;height:100%;object-fit:cover}
+.fj-avatar-pick{display:flex;flex-direction:column;align-items:center;gap:8px}
+.fj-avatar-btn{position:relative;background:none;border:0;padding:0;cursor:pointer;border-radius:50%}
+.fj-avatar-btn:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+.fj-avatar-btn:disabled{opacity:.6}
+.fj-avatar-cam{position:absolute;right:0;bottom:0;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
+  background:var(--acc);color:#fff;border:3px solid var(--bg);font-size:15px}
+.fj-account-head{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0 4px}

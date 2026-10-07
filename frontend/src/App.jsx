@@ -42,7 +42,9 @@ import CoachChat from './views/CoachChat.jsx'
 import CoachIntake from './views/CoachIntake.jsx'
 import CoachSetup from './views/CoachSetup.jsx'
 import ForjaAuth from './views/forja/Auth.jsx'
-import { useForjaSession } from './lib/forja-session.js'
+import ForjaOnboarding from './views/forja/Onboarding.jsx'
+import { useForjaSession, useForjaProfile } from './lib/forja-session.js'
+import { profileIsComplete } from './lib/forja-profile.js'
 import { FORJA_AUTH_UI } from './lib/forja-config.js'
 
 // last known scrollY per route, so back-navigation can put the page where it was
@@ -164,6 +166,9 @@ function Shell() {
   // Forja: con cuentas de correo activas, entrar exige una sesión de Forja además del perfil local.
   const forjaSession = useForjaSession()
   const authed = (user || isGuest) && (!FORJA_AUTH_UI || !!forjaSession)
+  // y, dentro, la cuenta tiene que haber completado su perfil (fecha de nacimiento, tutor si es menor).
+  const forjaProfile = useForjaProfile()
+  const needsForjaProfile = FORJA_AUTH_UI && authed && !profileIsComplete(forjaProfile.row)
   if (!ready && !authed) return (
     <div id="app">
       <div style={{ paddingTop: '44vh', display: 'flex', justifyContent: 'center', fontSize: 34, color: 'var(--label-3)' }}>
@@ -178,7 +183,7 @@ function Shell() {
           re-mounts the boundary, so the tab bar is always a way out */}
       <div id="app" className="vfade" key={loc.pathname}>
         <ErrorBoundary>
-          {!authed ? (FORJA_AUTH_UI ? <ForjaAuth /> : <Login />) : needsMobileOnboarding ? <MobileOnboarding /> : (
+          {!authed ? (FORJA_AUTH_UI ? <ForjaAuth /> : <Login />) : needsForjaProfile ? <ForjaOnboarding /> : needsMobileOnboarding ? <MobileOnboarding /> : (
             <Routes>
               <Route path="/home" element={<Home />} />
               {/* Gym check-in — switched off in Settings, the route falls through to the
@@ -211,7 +216,7 @@ function Shell() {
           including on the sign-in screen, when the server has just ended the session. */}
       <SyncBanner />
       {/* The chat owns the bottom of the screen: its composer sits where the tabs would be. */}
-      {loc.pathname !== '/coach' && !(FORJA_AUTH_UI && !authed) && <TabBar onStart={startFlow} />}
+      {loc.pathname !== '/coach' && !(FORJA_AUTH_UI && (!authed || needsForjaProfile)) && <TabBar onStart={startFlow} />}
       <RestTimer />
       <Modals />
       <Toast />
