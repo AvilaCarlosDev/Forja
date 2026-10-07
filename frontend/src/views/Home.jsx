@@ -119,8 +119,10 @@ export default function Home() {
     </div>
 
     {/* Jump to the gym check-in cards (QR membership codes). Shown here as a quick tap on
-        arrival at the gym; folds away per user via the "Gym check-in" switch in Settings. */}
-    {S.checkIn !== false && (
+        arrival at the gym; folds away per user via the "Gym check-in" switch in Settings.
+        Forja hides it: gyms in Punto Fijo have no turnstile readers, and this card becomes
+        "Marcar asistencia" (docs/plan-coach-controla.md, phase 5). */}
+    {S.checkIn !== false && !forja && (
       <div className="card tappable" style={{ cursor: 'pointer' }} {...tappable(() => nav('/checkin'))}>
         <div className="row between">
           <div className="row" style={{ gap: 9 }}>

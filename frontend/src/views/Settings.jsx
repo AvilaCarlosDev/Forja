@@ -31,12 +31,14 @@ import { passwordOn, PasswordRow, openPasswordSignIn, openPasswordRegister } fro
 import { usePasskeys, PasskeysRow, DeviceLinkRow } from '../components/Passkeys.jsx'
 import { Section, Row, SelectRow, Switch, Segmented, Button, TextField } from '../components/ui.jsx'
 import ForjaAccount from './forja/Account.jsx'
+import { useForjaSession } from '../lib/forja-session.js'
 
 export default function Settings() {
   const nav = useNavigate()
   const S = useStore(s => s.S)
   const user = useStore(s => s.user)
   const coachLocal = useStore(s => s.coachLocal)
+  const forjaSession = useForjaSession()
   // Name-and-password sign-in, where the instance offers it (#118).
   const config = useStore(s => s.config)
   const pwOn = passwordOn(config)
@@ -387,11 +389,12 @@ export default function Settings() {
           options={[{ value: MONDAY, label: t('Monday') }, { value: SUNDAY, label: t('Sunday') }]}
           value={weekStartOf(S)} onChange={v => update(s => { s.weekStart = v })} />
       </Row>
-      {/* Membership QR codes on Home (views/CheckIn.jsx); off = no Home card, no route. */}
-      <Row icon="qr" iconTint="var(--blue)" title={t('Gym check-in')}
+      {/* Membership QR codes on Home (views/CheckIn.jsx); off = no Home card, no route.
+          Hidden under Forja, which replaces it with its own attendance (plan-coach-controla.md). */}
+      {!forjaSession && <Row icon="qr" iconTint="var(--blue)" title={t('Gym check-in')}
         subtitle={t('Show a card on Home with your membership QR codes.')}>
         <Switch checked={S.checkIn !== false} onChange={v => update(s => { s.checkIn = v })} />
-      </Row>
+      </Row>}
       {/* The Home summary is optional; hiding it leaves weight logging, history and Stats intact. */}
       <Row icon="scale" iconTint="var(--green)" title={t('Body weight')}
         subtitle={t('Show the body weight card on Home.')}>
