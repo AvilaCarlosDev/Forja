@@ -219,7 +219,7 @@ export default function Diet({ clientId, clientName, canEdit, pro, lockedText, o
         <ul className="fj-meals">{d.meals.map((m, i) => <MealView key={i} meal={m} />)}</ul>
         {d.notes && <div className="fj-note"><b>Indicaciones:</b> {d.notes}</div>}
         <small className="dim">Actualizada el {new Date(d.updated_at).toLocaleDateString('es-VE')} · valores aproximados</small>
-        {canEdit && <button type="button" className="fj-link danger" onClick={remove}>Borrar dieta</button>}
+        {canEdit && <Button variant="danger" size="sm" type="button" className="fj-btn-start" onClick={remove}>Borrar dieta</Button>}
       </>}
     </section>
     {editing && <DietEditor clientId={clientId} clientName={clientName} diet={d} otherClients={otherClients} onClose={() => setEditing(false)} onSaved={() => { setEditing(false); diet.reload() }} />}

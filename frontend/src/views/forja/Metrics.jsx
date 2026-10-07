@@ -89,7 +89,7 @@ function GoalCard({ clientId, canEdit }) {
   }
   return <section className="fj-card">
     <div className="fj-card-head"><h3>Meta</h3>
-      {canEdit && !editing && <button type="button" className="fj-link" onClick={() => { setF({ goal: g?.goal || '', target_weight_kg: g?.target_weight_kg ?? '', target_date: g?.target_date || '' }); setEditing(true) }}>{g ? 'Cambiar' : 'Fijar meta'}</button>}
+      {canEdit && !editing && <Button variant="tinted" size="sm" type="button" onClick={() => { setF({ goal: g?.goal || '', target_weight_kg: g?.target_weight_kg ?? '', target_date: g?.target_date || '' }); setEditing(true) }}>{g ? 'Cambiar' : 'Fijar meta'}</Button>}
     </div>
     {editing ? <form className="fj-form" onSubmit={save} noValidate>
       <Field id="fj-goal" label="Objetivo"><input id="fj-goal" className="input" maxLength={300} placeholder="Ej.: bajar grasa y ganar fuerza" value={f.goal} onChange={e => setF(p => ({ ...p, goal: e.target.value }))} /></Field>

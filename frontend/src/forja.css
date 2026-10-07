@@ -203,3 +203,6 @@
 .fj-profile-card-gym{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .fj-profile-card-gym .fj-gym-logo{border-radius:5px}
 .fj-profile-card-gym .fj-gym-logo b{font-size:9px}
+.fj-btn-wide{width:100%}
+.fj-btn-start{align-self:flex-start}
+.fj-note-actions{margin-top:8px}

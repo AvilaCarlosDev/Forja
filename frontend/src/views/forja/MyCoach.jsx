@@ -70,13 +70,13 @@ export default function MyCoach() {
     </section>}
 
     <section className="fj-card">
-      <div className="fj-card-head"><h3>Mi gimnasio</h3><button type="button" className="fj-link" onClick={() => setPanel('gym')}>Cambiar</button></div>
+      <div className="fj-card-head"><h3>Mi gimnasio</h3><Button variant="tinted" size="sm" type="button" onClick={() => setPanel('gym')}>Cambiar</Button></div>
       <p className="fj-p">{row.gym_id ? gymLabel(gym.data?.[0]) || '…' : row.remote ? 'Entreno en casa o a distancia' : 'Sin gimnasio'}</p>
     </section>
 
     <section className="fj-card">
       <div className="fj-card-head"><h3>Mi entrenador</h3>
-        {(active || pending) && <button type="button" className="fj-link" onClick={() => setPanel('trainer')}>Cambiar</button>}
+        {(active || pending) && <Button variant="tinted" size="sm" type="button" onClick={() => setPanel('trainer')}>Cambiar</Button>}
       </div>
       {links.loading && !links.data && <Loading />}
       {links.error && <ErrorNote error={links.error} retry={reload} />}
@@ -87,13 +87,13 @@ export default function MyCoach() {
       </div>}
       {pending && <div className="fj-note">
         Esperando que <b>{pending.trainer?.name}</b> acepte tu solicitud.{active ? ' Mientras tanto sigues con tu entrenador actual.' : ''}
-        {!active && <> <button type="button" className="fj-link" onClick={leave}>Retirar solicitud</button></>}
+        {!active && <div className="fj-row fj-note-actions"><Button variant="danger" size="sm" type="button" onClick={leave}>Retirar solicitud</Button></div>}
       </div>}
       {links.data && !active && !pending && <>
         <p className="dim small">No tienes entrenador: usas la app con acceso básico.</p>
         <Button variant="primary" type="button" onClick={() => setPanel('trainer')}>Elegir entrenador</Button>
       </>}
-      {active && <button type="button" className="fj-link danger" onClick={leave}>Dejar de entrenar con {active.trainer?.name || 'este entrenador'}</button>}
+      {active && <Button variant="danger" type="button" className="fj-btn-wide" onClick={leave}>Dejar de entrenar con {active.trainer?.name || 'este entrenador'}</Button>}
     </section>
 
     {active && pays.data && (() => {
