@@ -140,6 +140,28 @@ export function progress(rows = []) {
   return res
 }
 
+// Serie de una medida en el tiempo para la gráfica de evolución (función Pro): un punto por
+// fecha con valor, del más viejo al más nuevo. `key` es un campo de METRIC_FIELDS o un perímetro.
+export function metricSeries(rows = [], key) {
+  const girth = GIRTHS.some(g => g.key === key)
+  const pts = []
+  for (const r of rows) {
+    const v = girth ? r.measurements?.[key] : r[key]
+    if (v == null || !Number.isFinite(Number(v)) || !r.measured_on) continue
+    pts.push({ t: Date.parse(r.measured_on + 'T12:00:00'), y: Number(v), d: r.measured_on, created: r.created_at || '' })
+  }
+  pts.sort((a, b) => a.t - b.t || String(a.created).localeCompare(String(b.created)))
+  // Dos mediciones el mismo día: queda la última cargada.
+  const out = []
+  for (const p of pts) { if (out.length && out.at(-1).t === p.t) out.pop(); out.push({ t: p.t, y: p.y, d: p.d }) }
+  return out
+}
+
+// Medidas con al menos dos puntos: las únicas que tiene sentido graficar.
+export const chartableMetrics = (rows = []) =>
+  [...METRIC_FIELDS.filter(f => f.key !== 'height_cm'), ...GIRTHS.map(g => ({ ...g, unit: 'cm' }))]
+    .filter(f => metricSeries(rows, f.key).length >= 2)
+
 // ---- Finanzas ----------------------------------------------------------------------------------
 
 // Mes local 'YYYY-MM' (sin pasar por UTC: en Venezuela, de noche, UTC ya es mañana).

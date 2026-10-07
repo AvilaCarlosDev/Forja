@@ -4,10 +4,11 @@
 import { useState } from 'react'
 import { Button } from '../../components/ui.jsx'
 import { api } from '../../lib/forja-api.js'
-import { METRIC_FIELDS, GIRTHS, metricRow, latestValues, progress, bmi } from '../../lib/forja-coach.js'
+import { METRIC_FIELDS, GIRTHS, metricRow, latestValues, progress, bmi, metricSeries, chartableMetrics } from '../../lib/forja-coach.js'
+import LineChart from '../../components/LineChart.jsx'
 import { todayISO } from '../../lib/forja-profile.js'
 import { useUI } from '../../store/useUI.js'
-import { Field, Panel, Loading, ErrorNote, useLoad } from './parts.jsx'
+import { Field, Panel, Choice, Loading, ErrorNote, useLoad } from './parts.jsx'
 
 const toast = m => useUI.getState().toast(m)
 const fmt = v => (v == null ? '—' : String(Math.round(Number(v) * 10) / 10).replace('.', ','))
@@ -52,6 +53,27 @@ function AddMetric({ clientId, onSaved, onClose }) {
   </Panel>
 }
 
+// Evolución de una medida en el tiempo (función Pro), con la meta de peso como referencia.
+function EvolutionCard({ rows, pro, targetWeight }) {
+  const options = chartableMetrics(rows)
+  const [key, setKey] = useState('weight_kg')
+  if (!options.length) return null
+  const sel = options.find(o => o.key === key) || options[0]
+  const pts = metricSeries(rows, sel.key)
+  const diff = pts.at(-1).y - pts[0].y
+  return <section className="fj-card">
+    <div className="fj-card-head"><h3>Evolución</h3>{!pro && <span className="fj-badge">Pro</span>}</div>
+    {pro ? <>
+      <Choice id="fj-evo" options={options.map(o => ({ value: o.key, label: o.label }))} value={sel.key} onChange={setKey} />
+      <p className="fj-p"><b>{sel.label}</b>: {fmt(pts[0].y)} → {fmt(pts.at(-1).y)} {sel.unit}
+        <span className="dim"> ({sign(diff)} {sel.unit} en {pts.length} mediciones)</span></p>
+      <div className="chart"><LineChart points={pts} h={160} unit={sel.unit}
+        goal={sel.key === 'weight_kg' && targetWeight ? Number(targetWeight) : null} /></div>
+      {sel.key === 'weight_kg' && targetWeight && <small className="dim">La línea punteada es la meta: {fmt(targetWeight)} kg.</small>}
+    </> : <p className="dim small">La gráfica de evolución es parte del plan Pro del entrenador.</p>}
+  </section>
+}
+
 function GoalCard({ clientId, canEdit }) {
   const goal = useLoad(() => api().goal(clientId), [clientId])
   const [editing, setEditing] = useState(false)
@@ -85,6 +107,7 @@ function GoalCard({ clientId, canEdit }) {
 
 export default function Metrics({ clientId, canEdit, pro, readOnlyNote }) {
   const rows = useLoad(() => api().metrics(clientId), [clientId])
+  const goal = useLoad(() => api().goal(clientId), [clientId])
   const [adding, setAdding] = useState(false)
   if (rows.loading && !rows.data) return <Loading text="Cargando medidas…" />
   if (rows.error) return <ErrorNote error={rows.error} retry={rows.reload} />
@@ -110,6 +133,7 @@ export default function Metrics({ clientId, canEdit, pro, readOnlyNote }) {
         </div>}
     </section>
     <GoalCard clientId={clientId} canEdit={canEdit} />
+    <EvolutionCard rows={data} pro={pro} targetWeight={goal.data?.target_weight_kg} />
     {Object.keys(prog).length > 0 && <section className="fj-card">
       <div className="fj-card-head"><h3>Avance desde el inicio</h3>{!pro && <span className="fj-badge">Pro</span>}</div>
       {pro ? <div className="fj-stats">

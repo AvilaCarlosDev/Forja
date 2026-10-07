@@ -36,27 +36,33 @@ const TRAINERS = [
 ]
 const trainerGyms = Object.fromEntries(TRAINERS.map(t => [t.id, t.gyms]))
 
-// Una serie de medidas cada `every` días, de `from` a `to` con un poco de ruido determinista.
-function series(clientId, by, { weeks, every = 14, from, to, height, girthsFrom, girthsTo, notes = {} }) {
+// Una serie de medidas cada `every` días durante `weeks` semanas, como las carga un entrenador:
+// el cambio es rápido al principio y se frena después (`ease`), con un rebote a mitad de camino
+// (`bump`: kg que se recuperan, por ejemplo unas vacaciones) y el vaivén normal de semana a semana.
+// Los perímetros se toman cada dos mediciones.
+function series(clientId, by, { weeks, every = 7, ease = 2.2, bump = 0, bumpAt = 0.55, from, to, height, girthsFrom, girthsTo, notes = {} }) {
   const rows = []
   const steps = Math.floor(weeks * 7 / every)
+  const curve = p => (1 - Math.exp(-ease * p)) / (1 - Math.exp(-ease))
   for (let i = 0; i <= steps; i++) {
-    const p = i / steps
-    const wobble = Math.sin(i * 1.7) * 0.25
-    const lerp = (a, b, k = 1) => Math.round((a + (b - a) * p + wobble * k) * 10) / 10
-    const m = {}
-    for (const k of Object.keys(girthsFrom)) m[k] = lerp(girthsFrom[k], girthsTo[k], 0.6)
+    const p = i / steps, f = curve(p)
+    const hump = Math.exp(-(((p - bumpAt) / 0.09) ** 2))      // 0..1 alrededor del rebote
+    const noise = Math.sin(i * 2.31) * 0.6 + Math.sin(i * 0.87 + 1) * 0.4
+    const towards = (a, b) => a + (b - a) * f
+    const r = (v, d = 1) => Math.round(v * 10 ** d) / 10 ** d
     const day = daysAgo((steps - i) * every)
+    const dir = Math.sign(to.weight_kg - from.weight_kg) || 1
     const row = {
       id: id('m'), client_id: clientId, recorded_by: by, measured_on: iso(day),
-      weight_kg: lerp(from.weight_kg, to.weight_kg),
-      body_fat_pct: lerp(from.body_fat_pct, to.body_fat_pct),
-      visceral_fat: Math.round(from.visceral_fat + (to.visceral_fat - from.visceral_fat) * p),
-      muscle_mass_kg: lerp(from.muscle_mass_kg, to.muscle_mass_kg, 0.4),
-      measurements: m, created_at: stamp(day),
+      weight_kg: r(towards(from.weight_kg, to.weight_kg) - dir * bump * hump + noise * 0.35),
+      body_fat_pct: r(towards(from.body_fat_pct, to.body_fat_pct) + (to.body_fat_pct < from.body_fat_pct ? 1 : -1) * bump * 0.4 * hump + noise * 0.25),
+      visceral_fat: Math.round(towards(from.visceral_fat, to.visceral_fat)),
+      muscle_mass_kg: r(towards(from.muscle_mass_kg, to.muscle_mass_kg) + noise * 0.12),
+      measurements: {}, created_at: stamp(day),
     }
+    if (i % 2 === 0 || i === steps) for (const k of Object.keys(girthsFrom)) row.measurements[k] = r(towards(girthsFrom[k], girthsTo[k]) + noise * 0.3)
     if (i === 0) row.height_cm = height
-    if (notes[i]) row.note = notes[i]
+    if (notes[i] || notes[i - steps - 1]) row.note = notes[i] || notes[i - steps - 1]   // índice negativo = desde el final
     rows.push(row)
   }
   return rows
@@ -91,8 +97,8 @@ const CUT_F = [   // déficit para ella, ~1.700 kcal
 // El historial de entrenamiento (rutinas, sesiones y pesajes) sale del perfil de ejemplo de la
 // app; aquí se pasa a español y se ajusta a cada persona.
 const ROUTINE_ES = { 'Push Day': 'Empuje · pecho, hombro y tríceps', 'Pull Day': 'Tirón · espalda y bíceps', 'Leg Day': 'Pierna y glúteo' }
-function training({ loadScale = 1, bwFrom, bwTo, targetW, body }) {
-  const s = buildDemoState()
+function training({ weeks = 12, loadScale = 1, bwFrom, bwTo, targetW, body }) {
+  const s = buildDemoState(weeks)
   for (const r of s.routines) r.name = ROUTINE_ES[r.name] || r.name
   const names = Object.fromEntries(s.routines.map(r => [r.id, r.name]))
   const step = w => (w >= 20 ? 2.5 : 1)
@@ -134,36 +140,42 @@ function file(title, store) {
   const link = (c, ago, fee) => ({ id: id('l'), client_id: c, trainer_id: me, status: 'active',
     requested_at: stamp(daysAgo(ago + 1)), decided_at: stamp(daysAgo(ago)), monthly_fee: fee })
   const links = [
-    link('c-demo-1', 84, 30),   // 12 semanas, al día
-    link('c-demo-2', 56, 35),   // 8 semanas, le falta el mes en curso
-    link('c-demo-3', 70, 25),   // 10 semanas, debe dos meses
+    link('c-demo-1', 26 * 7, 30),   // 6 meses, al día
+    link('c-demo-2', 16 * 7, 35),   // 4 meses, le falta el mes en curso
+    link('c-demo-3', 20 * 7, 25),   // 5 meses, debe dos meses
     { id: id('l'), client_id: 'c-demo-4', trainer_id: me, status: 'pending', requested_at: stamp(daysAgo(1)) },
   ]
   const metrics = [
-    ...series('c-demo-1', me, { weeks: 12, height: 162,
+    // María: 6 meses bajando grasa, con un rebote a mitad de camino
+    ...series('c-demo-1', me, { weeks: 26, height: 162, bump: 1.1,
       from: { weight_kg: 72.4, body_fat_pct: 32.5, visceral_fat: 7, muscle_mass_kg: 25.1 },
-      to: { weight_kg: 66.8, body_fat_pct: 27.6, visceral_fat: 5, muscle_mass_kg: 26.2 },
-      girthsFrom: { waist: 82, hip: 104, arm: 30, thigh: 60 }, girthsTo: { waist: 75.5, hip: 99, arm: 29.5, thigh: 57 },
-      notes: { 0: 'Evaluación inicial. Objetivo: bajar grasa sin perder fuerza.', 3: 'Buena adherencia; subimos cardio a 3 días.' } }),
-    ...series('c-demo-2', me, { weeks: 8, height: 176,
-      from: { weight_kg: 68.2, body_fat_pct: 14, visceral_fat: 3, muscle_mass_kg: 30.4 },
-      to: { weight_kg: 71.6, body_fat_pct: 14.6, visceral_fat: 3, muscle_mass_kg: 32.5 },
-      girthsFrom: { chest: 92, waist: 76, arm: 31, thigh: 52 }, girthsTo: { chest: 96, waist: 77, arm: 33.5, thigh: 55 },
-      notes: { 0: 'Volumen limpio: superávit moderado.' } }),
-    ...series('c-demo-3', me, { weeks: 10, every: 21, height: 158,
-      from: { weight_kg: 79, body_fat_pct: 38, visceral_fat: 10, muscle_mass_kg: 22.8 },
-      to: { weight_kg: 76.9, body_fat_pct: 36.4, visceral_fat: 9, muscle_mass_kg: 23 },
-      girthsFrom: { waist: 94, hip: 112 }, girthsTo: { waist: 91, hip: 110 } }),
+      to: { weight_kg: 64.6, body_fat_pct: 26.1, visceral_fat: 4, muscle_mass_kg: 26.4 },
+      girthsFrom: { waist: 82, hip: 104, arm: 30, thigh: 60 }, girthsTo: { waist: 72.5, hip: 97, arm: 29, thigh: 55.5 },
+      notes: { 0: 'Evaluación inicial. Objetivo: bajar grasa sin perder fuerza.', 4: 'Buena adherencia; subimos cardio a 3 días.',
+        14: 'Volvió de vacaciones con +1 kg. Retomamos el plan sin cambios.', '-1': 'Muy bien: −7,8 kg en 6 meses. Pasamos a mantenimiento activo.' } }),
+    // José: 4 meses de volumen limpio, subiendo músculo
+    ...series('c-demo-2', me, { weeks: 16, height: 176, ease: 0.6,
+      from: { weight_kg: 66.5, body_fat_pct: 13.8, visceral_fat: 3, muscle_mass_kg: 29.8 },
+      to: { weight_kg: 71.9, body_fat_pct: 14.9, visceral_fat: 3, muscle_mass_kg: 33.1 },
+      girthsFrom: { chest: 91, waist: 75.5, arm: 30.5, thigh: 51.5 }, girthsTo: { chest: 97, waist: 77.5, arm: 34, thigh: 56 },
+      notes: { 0: 'Volumen limpio: superávit moderado.', 8: 'Sube bien. Ajustamos +200 kcal en días de pierna.' } }),
+    // Ana: 5 meses con altibajos (falta a entrenar y debe dos meses)
+    ...series('c-demo-3', me, { weeks: 20, every: 14, height: 158, ease: 1.2, bump: 1.6, bumpAt: 0.7,
+      from: { weight_kg: 81, body_fat_pct: 38.4, visceral_fat: 11, muscle_mass_kg: 22.6 },
+      to: { weight_kg: 77.2, body_fat_pct: 36, visceral_fat: 9, muscle_mass_kg: 23.1 },
+      girthsFrom: { waist: 95, hip: 113 }, girthsTo: { waist: 90.5, hip: 109.5 },
+      notes: { 7: 'Faltó tres semanas. Hay que retomar la constancia.' } }),
   ]
+
   const goals = {
     'c-demo-1': { client_id: 'c-demo-1', goal: 'Bajar a 63 kg y llegar a 25 % de grasa', target_weight_kg: 63, target_date: iso(daysAgo(-70)), updated_by: me, updated_at: stamp(daysAgo(84)) },
     'c-demo-2': { client_id: 'c-demo-2', goal: 'Ganar 5 kg de masa muscular', target_weight_kg: 74, target_date: iso(daysAgo(-90)), updated_by: me, updated_at: stamp(daysAgo(56)) },
     'c-demo-3': { client_id: 'c-demo-3', goal: 'Bajar la grasa visceral y la cintura', target_weight_kg: 72, target_date: iso(daysAgo(-120)), updated_by: me, updated_at: stamp(daysAgo(70)) },
   }
   const pays = [
-    ...payments('c-demo-1', me, 30, 2, 0, ['Pago móvil BDV', 'Zelle', 'Pago móvil BDV']),
-    ...payments('c-demo-2', me, 35, 1, 1, ['Efectivo USD']),
-    ...payments('c-demo-3', me, 25, 2, 2, ['Binance']),
+    ...payments('c-demo-1', me, 30, 5, 0, ['Pago móvil BDV', 'Zelle', 'Pago móvil BDV', 'Efectivo USD']),
+    ...payments('c-demo-2', me, 35, 3, 1, ['Efectivo USD', 'Binance']),
+    ...payments('c-demo-3', me, 25, 4, 2, ['Binance']),
   ]
   const diets = {
     'c-demo-1': diet('c-demo-1', me, { kcal: 1700, protein: 135, carbs: 185, fat: 45 }, CUT_F,
@@ -187,7 +199,7 @@ function file(title, store) {
     gym_guest: 1,
     forja_session_v1: { access_token: 'preview', refresh_token: '', expires_at: 0, preview: true,
       profile: { id: me, email: 'coach@demo.forja', name: 'Coach Demo', sex: 'male', role: 'trainer' } },
-    gym_state_v1: training({ bwFrom: 82.4, bwTo: 79.1, targetW: 78, body: 'male' }),
+    gym_state_v1: training({ weeks: 26, bwFrom: 84.1, bwTo: 79.3, targetW: 78, body: 'male' }),
     forja_preview_profile_v1: profile,
   }))
 }
@@ -196,12 +208,12 @@ function file(title, store) {
 {
   const me = 'preview', coach = 't-demo-1'
   const trainers = TRAINERS.map(t => (t.id === coach ? { ...t, plan: 'pro' } : t))
-  const l = { id: id('l'), client_id: me, trainer_id: coach, status: 'active', requested_at: stamp(daysAgo(86)), decided_at: stamp(daysAgo(85)), monthly_fee: 30 }
-  const metrics = series(me, coach, { weeks: 12, height: 165,
-    from: { weight_kg: 68.5, body_fat_pct: 31, visceral_fat: 6, muscle_mass_kg: 24.6 },
-    to: { weight_kg: 63.9, body_fat_pct: 26.8, visceral_fat: 4, muscle_mass_kg: 25.7 },
-    girthsFrom: { waist: 79, hip: 102, arm: 29, thigh: 58, calf: 36 }, girthsTo: { waist: 72.5, hip: 97.5, arm: 28.5, thigh: 55, calf: 35.5 },
-    notes: { 0: 'Evaluación inicial con bioimpedancia.', 4: 'Va excelente: -3 kg y la cintura bajando.' } })
+  const l = { id: id('l'), client_id: me, trainer_id: coach, status: 'active', requested_at: stamp(daysAgo(24 * 7 + 1)), decided_at: stamp(daysAgo(24 * 7)), monthly_fee: 30 }
+  const metrics = series(me, coach, { weeks: 24, height: 165, bump: 0.8, bumpAt: 0.45,
+    from: { weight_kg: 70.2, body_fat_pct: 31.8, visceral_fat: 6, muscle_mass_kg: 24.4 },
+    to: { weight_kg: 63.6, body_fat_pct: 25.9, visceral_fat: 4, muscle_mass_kg: 25.9 },
+    girthsFrom: { waist: 80, hip: 103, arm: 29.5, thigh: 58.5, calf: 36 }, girthsTo: { waist: 71.5, hip: 96.5, arm: 28.5, thigh: 54.5, calf: 35.5 },
+    notes: { 0: 'Evaluación inicial con bioimpedancia.', 10: 'Semana de carnaval: +0,8 kg. Volvemos al plan.', '-1': 'Va excelente: −6,6 kg y 8,5 cm menos de cintura.' } })
   const goals = { [me]: { client_id: me, goal: 'Llegar a 62 kg y marcar abdomen', target_weight_kg: 62, target_date: iso(daysAgo(-60)), updated_by: coach, updated_at: stamp(daysAgo(85)) } }
   const diets = { [me]: diet(me, coach, { kcal: 1700, protein: 135, carbs: 185, fat: 45 }, CUT_F,
     'Toma 2 L de agua al día. Si entrenas de noche, pasa la merienda de la tarde a después del entreno.', 15) }
@@ -211,11 +223,11 @@ function file(title, store) {
   const profile = { id: me, name: 'Lucía Demo', sex: 'female', role: 'client', plan: 'free', birth_date: '1996-03-14', gym_id: 'g-gs-sambil', remote: false, onboarded_at: stamp(daysAgo(86)) }
   writeFileSync(join(out, 'sesion-cliente.js'), file('Lucía Demo (clienta)', {
     forja_preview_db_v1: { gyms: GYMS, people: trainers, trainerGyms, links: [l], notifications, metrics, goals,
-      payments: payments(me, coach, 30, 2, 0, ['Pago móvil Provincial', 'Pago móvil Provincial', 'Zelle']), diets },
+      payments: payments(me, coach, 30, 5, 0, ['Pago móvil Provincial', 'Pago móvil Provincial', 'Zelle']), diets },
     gym_guest: 1,
     forja_session_v1: { access_token: 'preview', refresh_token: '', expires_at: 0, preview: true,
       profile: { id: me, email: 'lucia@demo.forja', name: 'Lucía Demo', sex: 'female', role: 'client' } },
-    gym_state_v1: training({ loadScale: 0.55, bwFrom: 68.5, bwTo: 63.9, targetW: 62, body: 'female' }),
+    gym_state_v1: training({ weeks: 24, loadScale: 0.55, bwFrom: 70.2, bwTo: 63.6, targetW: 62, body: 'female' }),
     forja_preview_profile_v1: profile,
   }))
 }

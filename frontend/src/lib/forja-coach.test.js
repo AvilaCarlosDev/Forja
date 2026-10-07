@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   gymLabel, normalizeSocial, validateGymSuggestion, filterGyms, effectivePlan, clientCanEditMetrics,
   linkSummary, notificationText, metricRow, bmi, latestValues, progress, FREE_CLIENT_LIMIT,
-  monthKey, prevMonthKey, monthName, paymentStatus, financeSummary,
+  monthKey, prevMonthKey, monthName, paymentStatus, financeSummary, metricSeries, chartableMetrics,
 } from './forja-coach.js'
 
 const gyms = [
@@ -165,5 +165,26 @@ describe('finanzas', () => {
     expect(s.rows[2].status).toBe('pendiente')
     expect(s.due).toBe(25) // el de30 ya pagó; sin monto no suma
     expect(s.vencidos).toBe(1)
+  })
+})
+
+describe('forja-coach — evolución de medidas', () => {
+  const rows = [
+    { measured_on: '2026-09-01', weight_kg: 70, measurements: { waist: 80 }, created_at: '2026-09-01T10:00:00Z' },
+    { measured_on: '2026-07-01', weight_kg: 74, body_fat_pct: 30, measurements: {}, created_at: '2026-07-01T10:00:00Z' },
+    { measured_on: '2026-09-01', weight_kg: 69.5, measurements: {}, created_at: '2026-09-01T18:00:00Z' },
+    { measured_on: '2026-08-01', weight_kg: 72, measurements: { waist: 83 }, created_at: '2026-08-01T10:00:00Z' },
+  ]
+
+  it('orders the points by date and keeps the last reading of a day', () => {
+    expect(metricSeries(rows, 'weight_kg').map(p => [p.d, p.y])).toEqual([['2026-07-01', 74], ['2026-08-01', 72], ['2026-09-01', 69.5]])
+    expect(metricSeries(rows, 'waist').map(p => p.y)).toEqual([83, 80])
+    expect(metricSeries(rows, 'body_fat_pct')).toHaveLength(1)
+    expect(metricSeries([], 'weight_kg')).toEqual([])
+  })
+
+  it('only offers metrics with at least two readings, and never the height', () => {
+    const keys = chartableMetrics([...rows, { measured_on: '2026-06-01', height_cm: 165, measurements: {} }, { measured_on: '2026-09-02', height_cm: 165, measurements: {} }]).map(f => f.key)
+    expect(keys).toEqual(['weight_kg', 'waist'])
   })
 })

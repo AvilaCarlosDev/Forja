@@ -59,14 +59,15 @@ const monday = date => { const d = new Date(date); d.setDate(d.getDate() - ((d.g
 // A full example profile: 12 weeks of Mon/Wed/Fri sessions on the starter plan, with linear
 // progression, the odd missed session, twice-weekly weigh-ins trending toward the goal, and
 // per-set effort ratings on most (not all) of it.
-export function buildDemoState() {
+// `weeks`: how much history to fabricate (the app demo uses 12; Forja's demo sessions, months).
+export function buildDemoState(weeks = WEEKS) {
   const rnd = rng(20260723)
   const [push, pull, legs] = starterRoutines()
   const byWeekday = { 1: push, 3: pull, 5: legs }
 
   const nowH = new Date().getHours()
   const today = new Date(); today.setHours(12, 0, 0, 0)
-  const start = new Date(today); start.setDate(start.getDate() - WEEKS * 7)
+  const start = new Date(today); start.setDate(start.getDate() - weeks * 7)
 
   const workouts = []
   const bodyweight = []
@@ -77,7 +78,7 @@ export function buildDemoState() {
     const day = new Date(d)
     const iso = isoOf(day)
     const weekIdx = Math.floor((day - start) / (7 * 86400000))
-    const p = Math.min(1, weekIdx / WEEKS)
+    const p = Math.min(1, weekIdx / weeks)
 
     // weigh-ins: Monday and Thursday mornings
     if (day.getDay() === 1 || day.getDay() === 4) {
