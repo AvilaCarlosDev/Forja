@@ -4,7 +4,7 @@
 import { useState } from 'react'
 import { useUI } from '../../store/useUI.js'
 import { useStore } from '../../store/useStore.js'
-import { Button, Segmented } from '../../components/ui.jsx'
+import { Button } from '../../components/ui.jsx'
 import { BRAND } from '../../lib/brand.js'
 import { LEGAL } from '../../lib/forja-config.js'
 import {
@@ -27,6 +27,19 @@ function Field({ id, label, hint, error, children }) {
   </div>
 }
 
+// Opciones excluyentes que solo se marcan al tocarlas. (El Segmented de openGym siempre
+// resalta la primera opción aunque no haya ninguna elegida, y aquí eso confundía.)
+function Choice({ id, options, value, onChange }) {
+  return <div className="fj-chips" role="radiogroup" aria-labelledby={id}>
+    {options.map((o, i) => <button key={o.value} type="button" role="radio" aria-checked={value === o.value}
+      id={i ? undefined : id + '-first'} className={'fj-chip' + (value === o.value ? ' on' : '')} onClick={() => onChange(o.value)}>
+      {o.label}
+    </button>)}
+  </div>
+}
+
+const SEX_OPTIONS = [{ value: 'male', label: 'Hombre' }, { value: 'female', label: 'Mujer' }]
+
 function Steps({ at, total }) {
   return <div className="fj-steps" aria-label={`Paso ${at} de ${total}`}>
     {Array.from({ length: total }, (_, i) => <span key={i} className={i < at ? 'on' : ''} />)}
@@ -35,7 +48,7 @@ function Steps({ at, total }) {
 
 function focusFirst(prefix, errors) {
   const k = Object.keys(errors)[0]
-  if (k) document.getElementById(prefix + k)?.focus?.()
+  if (k) (document.getElementById(prefix + k + '-first') || document.getElementById(prefix + k))?.focus?.()
 }
 
 function Details({ row, next }) {
@@ -66,7 +79,7 @@ function Details({ row, next }) {
     </Field>
     <div className="fj-field">
       <div className="fj-legend" id="fj-ob-sex">Sexo</div>
-      <Segmented options={[{ value: 'male', label: 'Hombre' }, { value: 'female', label: 'Mujer' }]} value={f.sex} onChange={v => set('sex', v)} />
+      <Choice id="fj-ob-sex" options={SEX_OPTIONS} value={f.sex} onChange={v => set('sex', v)} />
       {errors.sex && <div className="fj-err" role="alert">{errors.sex}</div>}
     </div>
     <Field id="fj-ob-birth_date" label="Fecha de nacimiento" error={errors.birth_date}
@@ -104,7 +117,7 @@ function Guardian({ back, next }) {
     </Field>
     <div className="fj-field">
       <div className="fj-legend" id="fj-gd-relationship">Parentesco</div>
-      <Segmented options={RELATIONSHIPS} value={g.relationship} onChange={v => set('relationship', v)} />
+      <Choice id="fj-gd-relationship" options={RELATIONSHIPS} value={g.relationship} onChange={v => set('relationship', v)} />
       {errors.relationship && <div className="fj-err" role="alert">{errors.relationship}</div>}
     </div>
     <Field id="fj-gd-guardian_email" label="Su correo" hint="Lo usaremos solo para temas de tu cuenta." error={errors.guardian_email}>
