@@ -20,7 +20,8 @@ export function isStandalone(w = globalThis) {
 // Qué ofrecer: 'prompt' (botón con el diálogo nativo), 'ios' (pasos de Safari),
 // 'ios-other' (abrir en Safari primero, o compartir en Chrome de iOS), 'menu' (menú del navegador) o null.
 export function installMode({ plat, standalone, canPrompt }) {
-  if (standalone) return null
+  // Solo en teléfonos y tablets: en la computadora no se ofrece instalar.
+  if (standalone || plat === 'desktop') return null
   if (canPrompt) return 'prompt'
   if (plat === 'ios-safari') return 'ios'
   if (plat === 'ios-other') return 'ios-other'

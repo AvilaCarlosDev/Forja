@@ -63,7 +63,7 @@ export function InstallBanner() {
   const mode = useInstall()
   const [hidden, setHidden] = useState(() => wasDismissed())
   const [open, setOpen] = useState(false)
-  if (!mode || hidden || platform() === 'desktop') return null
+  if (!mode || hidden) return null
   const close = () => { dismiss(); setHidden(true) }
   return <div className="fj-install-banner" role="region" aria-label={`Instalar ${BRAND}`}>
     <img src="icon-192.png" alt="" />

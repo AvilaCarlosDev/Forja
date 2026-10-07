@@ -39,11 +39,13 @@ describe('installMode', () => {
   })
   it('prefers the native prompt, then Safari steps, then the browser menu', () => {
     expect(installMode({ plat: 'android', standalone: false, canPrompt: true })).toBe('prompt')
-    expect(installMode({ plat: 'desktop', standalone: false, canPrompt: true })).toBe('prompt')
     expect(installMode({ plat: 'ios-safari', standalone: false, canPrompt: false })).toBe('ios')
     expect(installMode({ plat: 'ios-other', standalone: false, canPrompt: false })).toBe('ios-other')
     expect(installMode({ plat: 'android', standalone: false, canPrompt: false })).toBe('menu')
     expect(installMode({ plat: 'desktop', standalone: false, canPrompt: false })).toBeNull()
+  })
+  it('never offers it on a computer, even when Chrome could install', () => {
+    expect(installMode({ plat: 'desktop', standalone: false, canPrompt: true })).toBeNull()
   })
 })
 
