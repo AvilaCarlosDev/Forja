@@ -83,3 +83,12 @@ El clip generado en Buzzy falló (`TASK_STATE_FAILED`, sin archivo). Se usa stoc
 - Bucle de 8 s sin corte: segundos 3–11 del clip con fundido de 1 s del final al principio (`xfade`).
 - Archivos en `frontend/public/forja/`: `login.webm` (VP9, 825 KB), `login.mp4` (H.264, 1,1 MB), `login-poster.jpg` (33 KB).
 - `views/forja/Auth.jsx` (`AuthBackdrop`): imagen fija primero, video tras la primera pintura, nada de video con `prefers-reduced-motion` o ahorro de datos, pausa con la pestaña oculta. Capa oscura y formulario con fondo translúcido; siempre en oscuro aunque la app esté en modo claro.
+
+### Cambio (2026-10-06, pedido de Carlos): plano abierto en todas las pantallas
+
+En el teléfono el plano medio (23261) se recortaba a un primer plano de las caras y Safari no lo reproducía (React no escribe el atributo `muted`). Ahora se usa [Mixkit 47023 — "Mature woman working out with her trainer"](https://mixkit.co/free-stock-video/mature-woman-working-out-with-her-trainer-47023/), un plano abierto con el entrenador guiando a su clienta en las cuerdas de batalla, que a Carlos le gustó más:
+
+- Teléfono en vertical (`max-aspect-ratio: 4/5`): recorte 4:5 (576×720) arriba, fundido con el formulario — `login-m.webm` (616 KB), `login-m.mp4` (680 KB).
+- Pantallas anchas: el mismo tramo en 16:9 — `login.webm` (836 KB), `login.mp4` (1,07 MB).
+- Tramo 3–11,6 s con fundido de 0,6 s (la cámara se mueve; un fundido más largo dejaba doble imagen).
+- `muted`, `defaultMuted` y `playsinline` se fijan a mano antes de `play()`.
