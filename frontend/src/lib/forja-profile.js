@@ -9,6 +9,7 @@ export const RELATIONSHIPS = [
   { value: 'padre', label: 'Padre' },
   { value: 'tutor', label: 'Tutor legal' },
 ]
+export const SEX_OPTIONS = [{ value: 'male', label: 'Hombre' }, { value: 'female', label: 'Mujer' }]
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/

@@ -12,7 +12,7 @@ import {
   ROLE_LABEL, getSession, useForjaProfile, loadProfile, updateProfile, saveGuardian, finishOnboarding, chooseRole,
 } from '../../lib/forja-session.js'
 import {
-  MIN_AGE, RELATIONSHIPS, ageOn, needsGuardian, todayISO, validateDetails, validateGuardian, guardianBody,
+  MIN_AGE, RELATIONSHIPS, SEX_OPTIONS, ageOn, needsGuardian, todayISO, validateDetails, validateGuardian, guardianBody,
 } from '../../lib/forja-profile.js'
 import { AvatarPicker } from './Avatar.jsx'
 import GymPicker from './GymPicker.jsx'
@@ -22,8 +22,6 @@ import { api } from '../../lib/forja-api.js'
 import '../../forja.css'
 
 const toast = m => useUI.getState().toast(m)
-
-const SEX_OPTIONS = [{ value: 'male', label: 'Hombre' }, { value: 'female', label: 'Mujer' }]
 
 function Steps({ at, total }) {
   return <div className="fj-steps" aria-label={`Paso ${at} de ${total}`}>

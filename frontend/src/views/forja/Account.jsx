@@ -1,16 +1,19 @@
 // Forja: la cuenta en Ajustes — foto, quién eres, tu perfil y cerrar sesión.
+import { useState } from 'react'
 import { useStore } from '../../store/useStore.js'
 import { useUI } from '../../store/useUI.js'
 import { Section, Row } from '../../components/ui.jsx'
 import { auth, setSession, useForjaSession, useForjaProfile, ROLE_LABEL } from '../../lib/forja-session.js'
 import { ageOn } from '../../lib/forja-profile.js'
 import { AvatarPicker } from './Avatar.jsx'
+import ProfileEdit from './ProfileEdit.jsx'
 
 const toast = m => useUI.getState().toast(m)
 
 export default function ForjaAccount() {
   const s = useForjaSession()
   const { row } = useForjaProfile()
+  const [edit, setEdit] = useState(false)
   if (!s) return null
   // Lo de la base manda sobre lo que se escribió al registrarse (el nombre puede haber cambiado).
   const profile = { ...s.profile, ...(row || {}), email: s.profile.email }
@@ -28,6 +31,9 @@ export default function ForjaAccount() {
     {row && <div className="fj-account-head"><AvatarPicker row={row} onError={toast} /></div>}
     <Row icon="person" iconTint="var(--acc)" title={profile.name} subtitle={profile.email} value={ROLE_LABEL[profile.role]} />
     {age != null && <Row icon="calendar" iconTint="var(--acc)" title="Edad" value={age + ' años'} />}
+    {row && <Row icon="pencil" iconTint="var(--indigo)" title="Editar perfil"
+      subtitle="Nombre, sexo, fecha de nacimiento y gimnasio" accessory="chevron" onClick={() => setEdit(true)} />}
     <Row icon="signOut" iconTint="var(--red)" title="Cerrar sesión" danger onClick={signOut} />
+    {edit && row && <ProfileEdit row={profile} onClose={() => setEdit(false)} />}
   </Section>
 }
