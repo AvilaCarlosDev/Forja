@@ -3,7 +3,7 @@
 <img src="assets/brand/forja-lockup.png" alt="Forja" width="520">
 
 **La app para entrenadores personales y sus clientes.**
-Gimnasio, vínculo coach–cliente, medidas y progreso: en el teléfono y en la computadora.
+Rutinas, dieta, medidas, progreso y cobros del coach con sus clientes: en el teléfono y en la computadora.
 
 [**Probar Forja →**](https://forja-trainer.vercel.app) · [Novedades](https://github.com/AvilaCarlosDev/Forja/releases) · [Plan del proyecto](docs/PLAN.md)
 
@@ -24,13 +24,33 @@ Gimnasio, vínculo coach–cliente, medidas y progreso: en el teléfono y en la 
 | **Vínculo** | Recibe la solicitud como notificación y acepta o rechaza | Elige a su entrenador entre los de su gimnasio y puede cambiarlo |
 | **Medidas** | Carga peso, talla, grasa corporal y visceral, masa muscular, perímetros y meta | Las ve en solo lectura; sin entrenador, carga lo básico él mismo |
 | **Historial** | Al recibir a un cliente, ve todo lo que trae de su entrenador anterior | Su historial lo acompaña siempre |
-| **Plan** | Free: hasta 5 clientes · Pro: ilimitados y comparativa de progreso | Nunca paga |
+| **Rutinas** | Las arma con el buscador de ejercicios (con animación): series, repeticiones, peso e indicaciones | Le llegan a su plan de la semana y las entrena tal cual |
+| **Dieta** (Pro) | Comidas con alimentos por porciones, objetivos de calorías y macros, plantillas y copiar de otro cliente | La ve en Mi coach |
+| **Evolución** (Pro) | Gráfica por medida con la meta y avance desde el inicio | Ve su peso y su meta en el inicio |
+| **Finanzas** (Pro) | Mensualidad por cliente, pagos registrados, pendientes y vencidos | — |
+| **Avisos** | Solicitudes y respuestas | «Tu coach te asignó una rutina», «te envió tu dieta», «cargó tus medidas» |
+| **Plan** | Free: hasta 5 clientes · Pro: ilimitados, dieta, evolución, comparativa y finanzas | Nunca paga |
 
 Además, todo lo que trae openGym: más de 1.300 ejercicios, planificador semanal, entrenamiento guiado y estadísticas.
 
 **Lista inicial de gimnasios de Punto Fijo**, cada uno con fuente oficial: Gold Stars Gym (Sambil Paraguaná, Las Virtudes y Ciudad del Viento), Altitude y New Life Training Center. Si falta el tuyo, lo agregas desde la app con su Instagram o una foto del logo ([fuentes](docs/research/gimnasios-punto-fijo.md)).
 
 ## Cómo se ve
+
+### El coach y su cliente
+
+<table>
+<tr>
+<td align="center" width="33%"><img src="docs/screenshots/movil-12-rutinas.jpg" alt="Rutinas que el coach asigna a su clienta, con la animación de cada ejercicio, series, repeticiones y peso"><br><sub>Rutinas asignadas (coach)</sub></td>
+<td align="center" width="33%"><img src="docs/screenshots/movil-13-evolucion.jpg" alt="Gráfica de evolución del peso con la meta y el avance desde el inicio"><br><sub>Evolución (Pro)</sub></td>
+<td align="center" width="33%"><img src="docs/screenshots/movil-14-dieta.jpg" alt="Dieta del cliente: objetivos de calorías y macros y comidas con sus alimentos"><br><sub>Dieta (Pro)</sub></td>
+</tr>
+<tr>
+<td align="center"><img src="docs/screenshots/movil-15-finanzas.jpg" alt="Finanzas del coach: cobrado, por cobrar, vencidos y pagos por cliente"><br><sub>Finanzas (Pro)</sub></td>
+<td align="center"><img src="docs/screenshots/movil-16-inicio-cliente.jpg" alt="Inicio de la clienta: entrenamiento de hoy asignado por su coach y su peso con la meta"><br><sub>Inicio del cliente</sub></td>
+<td align="center"><img src="docs/screenshots/movil-17-plan-cliente.jpg" alt="Plan semanal de la clienta con las rutinas que le asignó su coach"><br><sub>Plan de la semana (cliente)</sub></td>
+</tr>
+</table>
 
 ### En el teléfono
 
@@ -85,7 +105,10 @@ Forja es una app web instalable (PWA): no hace falta tienda.
 
 - Los datos se usan solo para operar y mejorar Forja. No se venden ni se ceden; sin publicidad ni rastreadores.
 - Cada tabla tiene **seguridad por fila** en Postgres: un entrenador solo ve a sus clientes activos, y el anterior pierde el acceso al cambiar de entrenador. Las reglas tienen pruebas automáticas que corren contra la base ([`supabase/tests`](supabase/tests)).
+- La otra parte de un vínculo solo lee las columnas públicas del perfil; el perfil propio completo llega por una función de la base.
 - Fotos de perfil en almacenamiento privado, una carpeta por persona.
+- Cabeceras de seguridad en Vercel: CSP sin código en línea, `frame-ancestors 'none'`, HSTS, nosniff y Referrer-Policy.
+- Términos y política de privacidad aceptados al crear la cuenta y al entrar.
 
 ## Stack
 
@@ -94,7 +117,7 @@ Forja es una app web instalable (PWA): no hace falta tienda.
 | Frontend | React 19 + Vite, PWA (heredado de openGym), sin SDK de Supabase: REST con `fetch` |
 | Cuentas y datos | Supabase: Auth, Postgres con RLS, Storage |
 | Hosting | Vercel |
-| Pruebas | Vitest (3.200+ tests) y pruebas de permisos SQL en Supabase y en PGlite |
+| Pruebas | Vitest (3.300+ tests, 160 propios de Forja) y 109 pruebas de permisos SQL en Supabase y en PGlite |
 
 ## Desarrollo
 
@@ -110,6 +133,8 @@ Vista previa sin servidor (cuentas y datos de ejemplo en el navegador):
 ```bash
 VITE_FORJA_AUTH_PREVIEW=1 npx vite
 ```
+
+Sesiones demo con meses de datos (un coach Pro y una clienta): `node scripts/forja-demo-sessions.mjs` y abrir `/demo/cargar-sesiones.html` con el servidor de desarrollo. No llegan a producción.
 
 Base de datos: las migraciones están en [`supabase/migrations`](supabase/migrations) y se aplican en orden en el editor SQL de Supabase. Para probar los permisos en local: `node supabase/tests/run-local.mjs` (con PGlite instalado).
 
