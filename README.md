@@ -7,7 +7,7 @@ Rutinas, dieta, medidas, progreso y cobros del coach con sus clientes: en el tel
 
 [**Probar Forja →**](https://forja-trainer.vercel.app) · [Novedades](https://github.com/AvilaCarlosDev/Forja/releases) · [Plan del proyecto](docs/PLAN.md)
 
-![Release](https://img.shields.io/github/v/release/AvilaCarlosDev/Forja?label=versi%C3%B3n&color=ff6b1a) ![Licencia](https://img.shields.io/badge/licencia-AGPL--3.0-111619) ![PWA](https://img.shields.io/badge/PWA-instalable-ff6b1a) ![Hecho en](https://img.shields.io/badge/hecho%20en-Punto%20Fijo%2C%20Venezuela-111619)
+[![Pruebas](https://github.com/AvilaCarlosDev/Forja/actions/workflows/test.yml/badge.svg)](https://github.com/AvilaCarlosDev/Forja/actions/workflows/test.yml) ![Release](https://img.shields.io/github/v/release/AvilaCarlosDev/Forja?label=versi%C3%B3n&color=ff6b1a) ![Licencia](https://img.shields.io/badge/licencia-AGPL--3.0-111619) ![PWA](https://img.shields.io/badge/PWA-instalable-ff6b1a) ![Hecho en](https://img.shields.io/badge/hecho%20en-Punto%20Fijo%2C%20Venezuela-111619)
 
 <br>
 

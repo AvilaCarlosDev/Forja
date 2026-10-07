@@ -11,6 +11,7 @@ on:
       - 'scripts/build-coach-assets.mjs'
       - 'scripts/build-coach-library.mjs'
       - 'api/coach/prompts/**'
+      - 'supabase/**'
       - '.github/workflows/test.yml'
   push:
     branches: [main, coach]
@@ -21,6 +22,7 @@ on:
       - 'scripts/build-coach-assets.mjs'
       - 'scripts/build-coach-library.mjs'
       - 'api/coach/prompts/**'
+      - 'supabase/**'
       - '.github/workflows/test.yml'
   workflow_dispatch:
 
@@ -61,6 +63,20 @@ jobs:
       - run: npm run test:fatigue-probe
         working-directory: frontend
 
+
+  # Forja: las migraciones de Supabase y sus pruebas de permisos (RLS) en un Postgres local
+  # (PGlite). PGlite se instala aparte para no sumar dependencias al repo.
+  permisos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm install --prefix "$RUNNER_TEMP/pglite" --no-save @electric-sql/pglite
+      - run: node supabase/tests/run-local.mjs
+        env:
+          NODE_PATH: ${{ runner.temp }}/pglite/node_modules
 
   mcp:
     runs-on: ubuntu-latest
