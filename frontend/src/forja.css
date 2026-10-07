@@ -188,3 +188,10 @@
 .fj-foods li.fj-food{flex-direction:row;align-items:flex-start;gap:10px}
 .fj-food .fj-food-icon{font-size:24px;width:36px;height:36px;flex:none;display:grid;place-items:center;border-radius:10px;background:var(--bg)}
 .fj-food-m{display:flex;flex-direction:column;gap:1px;min-width:0}
+/* Tarjeta del gimnasio: logo (o iniciales), nombre, sede y dirección */
+.fj-gym-logo{flex:none;display:grid;place-items:center;border-radius:12px;overflow:hidden;background:#fff;color:#111619}
+.fj-gym-logo img{width:100%;height:100%;object-fit:contain}
+.fj-gym-logo b{font-size:15px;letter-spacing:.5px}
+.fj-gym-logo b::after{content:attr(data-i)}
+.fj-gym-card{display:flex;align-items:center;gap:14px;padding:14px;border-radius:var(--r-card);background:var(--surface);border:1px dashed var(--sep)}
+.fj-row .fj-logo-pick{flex:1 1 140px}

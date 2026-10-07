@@ -31,6 +31,7 @@ export function validateGymSuggestion(f = {}, existing = []) {
   else if (name.length > 80) e.name = 'El nombre es demasiado largo'
   const social = String(f.social || '').trim()
   if (social && !normalizeSocial(social)) e.social = 'Pega el enlace o el @usuario de Instagram, X, Facebook o TikTok'
+  if (String(f.address || '').trim().length > 120) e.address = 'La dirección es demasiado larga'
   if (!social && !f.logo) e.proof = 'Agrega su red social o una foto del logo para poder validar que existe'
   const key = s => String(s || '').trim().toLowerCase()
   if (!e.name && existing.some(g => key(g.name) === key(name) && key(g.branch) === key(f.branch))) e.name = 'Ese gimnasio ya está en la lista'

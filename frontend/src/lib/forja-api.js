@@ -18,13 +18,13 @@ const LINK_SELECT = '*,client:profiles!coach_links_client_id_fkey(id,name,avatar
 
 export const remoteApi = {
   listGyms: () => db.select('gyms', 'select=id,name,branch,address,social_url,logo_path,verified&order=name.asc,branch.asc'),
-  async suggestGym({ name, branch, social_url, logo }) {
+  async suggestGym({ name, branch, address, social_url, logo }) {
     let logo_path = null
     if (logo) {
       logo_path = `${me()}/logo-${Date.now()}.webp`
       await db.upload('gym-logos', logo_path, logo, 'image/webp')
     }
-    return db.insert('gyms', { name: name.trim(), branch: branch?.trim() || null, social_url: social_url || null, logo_path, created_by: me() })
+    return db.insert('gyms', { name: name.trim(), branch: branch?.trim() || null, address: address?.trim() || null, social_url: social_url || null, logo_path, created_by: me() })
   },
   setClientGym: (gymId, remote) => updateProfile({ gym_id: gymId || null, remote: !!remote }),
   async myTrainerGyms() {
@@ -123,10 +123,13 @@ function seedRequestFor(d, trainerId) {
 const ok = v => Promise.resolve(v)
 export const previewApi = {
   listGyms: () => ok(load().gyms),
-  suggestGym({ name, branch, social_url, logo }) {
+  async suggestGym({ name, branch, address, social_url, logo }) {
+    // Sin servidor, el logo se guarda como data URL para que la tarjeta se vea igual.
+    const logo_url = logo ? await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(logo) }) : null
     const d = load()
-    const g = { id: uid(), name: name.trim(), branch: branch?.trim() || null, social_url: social_url || null, logo_path: logo ? 'preview-logo' : null, verified: false, created_by: me() }
-    d.gyms.push(g); save(d); return ok(g)
+    const g = { id: uid(), name: name.trim(), branch: branch?.trim() || null, address: address?.trim() || null, social_url: social_url || null,
+      logo_path: logo ? 'preview-logo' : null, logo_url, verified: false, created_by: me() }
+    d.gyms.push(g); save(d); return g
   },
   setClientGym: (gymId, remote) => updateProfile({ gym_id: gymId || null, remote: !!remote }),
   myTrainerGyms: () => ok(load().trainerGyms[me()] || []),
