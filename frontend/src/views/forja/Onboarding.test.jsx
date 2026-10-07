@@ -13,7 +13,7 @@ vi.mock('../../lib/forja-config.js', () => ({
   LEGAL: { terms: '#t', privacy: '#p' },
 }))
 vi.mock('../../store/useUI.js', () => ({ useUI: { getState: () => ({ toast: m => mocks.toasts.push(m) }) } }))
-vi.mock('../../store/useStore.js', () => ({ useStore: { getState: () => ({ update: fn => fn(mocks.S) }) } }))
+vi.mock('../../store/useStore.js', () => ({ useStore: { getState: () => ({ S: mocks.S, update: fn => fn(mocks.S) }) } }))
 
 const { default: Onboarding } = await import('./Onboarding.jsx')
 const session = await import('../../lib/forja-session.js')
@@ -48,9 +48,10 @@ const yearsAgo = n => { const [y, m, d] = todayISO().split('-'); return `${Numbe
 const row = () => session.getProfile().row
 const previewDb = () => JSON.parse(localStorage.getItem('forja_preview_db_v1'))
 
-async function details(sex, birth) {
+async function details(sex, birth, weight = '68,5') {
   await click(byText('button', sex))
   await type($('#fj-ob-birth_date'), birth)
+  await type($('#fj-ob-weight_kg'), weight)
   await submit()
 }
 
@@ -99,6 +100,16 @@ describe('Forja onboarding', () => {
     expect(host.textContent).toMatch('acceso básico')
     await click(byText('button', 'Continuar sin entrenador'))
     expect(row().onboarded_at).toBeTruthy()
+    // El peso del perfil es su primer pesaje y su primera medida; ya no se pide antes de entrenar.
+    expect(mocks.S.bodyweight.at(-1)).toMatchObject({ d: todayISO(), w: 68.5 })
+    expect(mocks.S.weighIn).toBe(false)
+    expect(previewDb().metrics.find(m => m.client_id === row().id)).toMatchObject({ weight_kg: 68.5, measured_on: todayISO() })
+  })
+
+  it('asks for the weight before going on', async () => {
+    await details('Hombre', '1990-01-01', '')
+    expect(host.textContent).toMatch('Escribe tu peso')
+    expect(row().birth_date).toBeFalsy()
   })
 
   it('"Otro" adds a missing gym with its Instagram and selects it', async () => {

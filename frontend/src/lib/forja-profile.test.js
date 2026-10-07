@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  MIN_AGE, ADULT_AGE, ageOn, needsGuardian, validateDetails, validateGuardian, guardianBody,
+  MIN_AGE, ADULT_AGE, ageOn, needsGuardian, validateDetails, validateGuardian, guardianBody, validateBody,
   profileIsComplete, avatarPath, fitSize, todayISO,
 } from './forja-profile.js'
 
@@ -77,5 +77,15 @@ describe('profile helpers', () => {
     expect(fitSize(300, 600)).toEqual({ w: 256, h: 512 })
     expect(fitSize(200, 100)).toEqual({ w: 200, h: 100 })
     expect(fitSize(0, 100)).toBeNull()
+  })
+})
+
+describe('forja-profile — peso y talla al completar el perfil', () => {
+  it('needs the weight; the height is optional; both within range', () => {
+    expect(validateBody({}).errors).toEqual({ weight_kg: 'Escribe tu peso' })
+    expect(validateBody({ weight_kg: '68,5' })).toEqual({ errors: {}, weight_kg: 68.5, height_cm: null })
+    expect(validateBody({ weight_kg: '68', height_cm: '165' })).toMatchObject({ errors: {}, height_cm: 165 })
+    expect(validateBody({ weight_kg: '10' }).errors.weight_kg).toMatch('entre 20 y 400')
+    expect(validateBody({ weight_kg: '70', height_cm: '20' }).errors.height_cm).toMatch('entre 80 y 250')
   })
 })

@@ -13,6 +13,21 @@
   - Con entrenador Pro, ve además la dieta, la gráfica de evolución y la comparativa.
   - Sin entrenador, el cliente puede pagar **Forja Personal** ($10 al mes) y controlar todo él mismo: rutinas, dieta, medidas y gráficas.
 
+## Rutinas y dieta según el tipo de cuenta (pedido 2026-10-07)
+
+| Cuenta | «Entrenar» y rutinas | Dieta | Medidas y gráficas |
+|---|---|---|---|
+| Cliente sin coach, Free | Arma su rutina como en openGym: elige ejercicios, peso, repeticiones y series | No | Carga su peso y medidas básicas. Sin gráfica de evolución |
+| Cliente sin coach, **Forja Personal** | Igual que Free, la arma él | Arma su propia dieta, **sin copiar ni usar la de nadie** | Todo, con gráficas y comparativa |
+| Cliente con coach Free | Ve la rutina que le asignó su coach | No | Ve las medidas actuales que carga el coach |
+| Cliente con coach **Pro** | Ve la rutina que le asignó su coach | Ve la dieta que le armó su coach | Todo, con gráficas y comparativa |
+| Coach Free | Asigna rutinas | No | Carga medidas |
+| Coach **Pro** | Asigna rutinas | Arma dietas, con plantillas y copiando la de otro cliente | Todo |
+
+- **Rutina asignada en la app del cliente:** al tocar «Entrenar» (o en Plan) ve la rutina de su coach. Cada ejercicio muestra su imagen o video de cómo se hace, junto con el peso, las repeticiones y las series que indicó el coach. Por ejemplo, «Jalón al pecho» y «Tríceps en polea»: al tocar uno se abre su imagen con la indicación.
+- **Aviso:** cuando el coach le asigna o cambia la rutina, al cliente le llega `routine_assigned` («Tu coach te asignó una rutina») y la rutina aparece en Plan y en «Entrenar».
+- **El peso se pide una sola vez, al completar el perfil**, junto con la talla (opcional). Es el primer pesaje y la primera medida. En Forja ya no se pide antes de cada entrenamiento.
+
 ## Fases
 
 | # | Fase | Qué incluye | Depende de |
