@@ -130,6 +130,13 @@ describe('Forja — dieta (entrenador Pro)', () => {
 })
 
 describe('Forja — dieta (cliente y plan Free)', () => {
+  it('a client whose coach is Free is told it depends on the coach plan', async () => {
+    await start({ plan: 'free', canEdit: false, diet: SAMPLE })
+    await click(byText('button', 'Dieta'))
+    expect(document.body.textContent).toMatch('solo está disponible si tu entrenador tiene el plan Pro')
+    expect(document.body.textContent).not.toMatch('Mejora tu suscripción')
+  })
+
   it('the client reads it and cannot edit', async () => {
     await start({ canEdit: false, diet: SAMPLE })
     expect(document.body.textContent).toMatch('solo lectura')
@@ -142,6 +149,10 @@ describe('Forja — dieta (cliente y plan Free)', () => {
     await start({ plan: 'free', diet: SAMPLE })
     expect(document.body.textContent).toMatch('Las dietas son parte del plan Pro')
     expect(document.body.textContent).not.toMatch('Huevo entero')
+    // tocarla abre «Mejora tu suscripción» con lo que trae Pro
+    await click(byText('button', 'Dieta'))
+    expect(document.body.textContent).toMatch('Mejora tu suscripción a Pro')
+    expect(document.body.textContent).toMatch('Clientes ilimitados')
     await act(async () => {
       await expect(api().setDiet('c-demo-1', SAMPLE)).rejects.toThrow('Pro')
       await expect(api().deleteDiet('c-demo-1')).rejects.toThrow('Pro')

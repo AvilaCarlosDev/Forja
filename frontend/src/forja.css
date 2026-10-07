@@ -206,3 +206,10 @@
 .fj-btn-wide{width:100%}
 .fj-btn-start{align-self:flex-start}
 .fj-note-actions{margin-top:8px}
+/* Función Pro bloqueada: la tarjeta se toca y abre «Mejora tu suscripción» */
+.fj-locked{width:100%;border:1px dashed var(--sep);color:var(--label);font:inherit;text-align:start;cursor:pointer}
+.fj-locked:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.fj-locked-cta{display:flex;align-items:center;gap:4px;color:var(--acc);font-size:15px;font-weight:600}
+.fj-perks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:15px}
+.fj-perks li{display:flex;align-items:flex-start;gap:8px}
+.fj-perks .icn{color:var(--acc);flex:none;margin-top:2px}

@@ -3,6 +3,7 @@
 // (los datos quedan guardados para cuando renueve).
 import { useState } from 'react'
 import { Button } from '../../components/ui.jsx'
+import Icon from '../../components/Icon.jsx'
 import { api } from '../../lib/forja-api.js'
 import {
   MACROS, itemFromFood, unitsText, mealTotals, dayTotals, versusTargets, customItem, parseTargets,
@@ -10,6 +11,7 @@ import {
 } from '../../lib/forja-diet.js'
 import { useUI } from '../../store/useUI.js'
 import { Field, Panel, Choice, Loading, ErrorNote, useLoad } from './parts.jsx'
+import Upgrade from './Upgrade.jsx'
 
 const toast = m => useUI.getState().toast(m)
 const fmt = v => String(Math.round(Number(v || 0) * 10) / 10).replace('.', ',')
@@ -198,10 +200,14 @@ function DietEditor({ clientId, clientName, diet, otherClients = [], onSaved, on
 export default function Diet({ clientId, clientName, canEdit, pro, lockedText, otherClients }) {
   const diet = useLoad(() => (pro ? api().diet(clientId) : null), [clientId, pro])
   const [editing, setEditing] = useState(false)
-  if (!pro) return <section className="fj-card">
-    <div className="fj-card-head"><h3>Dieta</h3><span className="fj-badge">Pro</span></div>
-    <p className="dim small">{lockedText || 'Las dietas son parte del plan Pro.'}</p>
-  </section>
+  if (!pro) return <>
+    <button type="button" className="fj-card fj-locked" onClick={() => setEditing('upgrade')}>
+      <span className="fj-card-head"><h3>Dieta</h3><span className="fj-badge">Pro</span></span>
+      <span className="dim small">{lockedText || 'Las dietas son parte del plan Pro.'}</span>
+      <span className="fj-locked-cta">{canEdit ? 'Mejorar a Pro para usarla' : 'Ver por qué'} <Icon name="chevronRight" /></span>
+    </button>
+    {editing === 'upgrade' && <Upgrade viewer={canEdit ? 'trainer' : 'client'} feature="La dieta" onClose={() => setEditing(false)} />}
+  </>
   if (diet.loading && !diet.data) return <Loading text="Cargando dieta…" />
   if (diet.error) return <ErrorNote error={diet.error} retry={diet.reload} />
   const d = diet.data
