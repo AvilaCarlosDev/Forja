@@ -46,6 +46,7 @@
 .fj-chip:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 /* Forja: Clientes, Mi coach, gimnasios y medidas */
 .fj-page{display:flex;flex-direction:column;gap:14px;padding-block:max(16px,var(--sat)) 120px}
+.fj-metrics{display:flex;flex-direction:column;gap:14px}
 .fj-title{font-size:28px;font-weight:700;letter-spacing:-.02em;margin:4px 0 0}
 .fj-subtitle{font-size:20px;font-weight:700;margin:10px 0 0}
 .fj-card{background:var(--surface);border-radius:var(--r-card);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
