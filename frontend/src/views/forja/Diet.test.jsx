@@ -43,6 +43,7 @@ afterEach(() => { act(() => root.unmount()); host.remove() })
 
 const $ = sel => document.querySelector(sel)
 const byText = (tag, text) => [...document.querySelectorAll(tag)].find(e => e.textContent.trim().startsWith(text))
+const withText = (sel, text) => [...document.querySelectorAll(sel)].find(e => e.textContent.includes(text))
 async function type(el, value) {
   const proto = el instanceof HTMLInputElement ? HTMLInputElement.prototype : HTMLTextAreaElement.prototype
   Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, value)
@@ -65,13 +66,11 @@ describe('Forja — dieta (entrenador Pro)', () => {
     expect(document.body.textContent).toMatch('Todavía no tiene dieta')
     await click(byText('button', 'Armar dieta'))
     await type($('#fj-t-kcal'), '1650')
-    // Desayuno: 2 huevos desde la lista (la porción arranca en la unidad casera)
+    // Desayuno: 2 huevos desde la grilla, con el botón de porción (agrega de una vez)
     await click(byText('button', '+ Agregar alimento'))
-    await type($('#fj-food-q'), 'huevo')
-    await click(byText('button', 'Huevo entero'))
-    expect($('#fj-food-g').value).toBe('50')
-    await type($('#fj-food-g'), '100')
-    await click(byText('button', 'Agregar'))
+    expect(document.body.textContent).toMatch('Proteínas')
+    await click(withText('.fj-food-btn', 'Huevo entero'))
+    await click(withText('.fj-grams button', '100 g'))
     expect(document.body.textContent).toMatch('≈ 2 huevos')
     expect(document.body.textContent).toMatch('143 / 1650 kcal')
     // y un alimento propio, con las calorías calculadas por los macros
@@ -94,6 +93,26 @@ describe('Forja — dieta (entrenador Pro)', () => {
     expect(d.meals[0].items[1]).toMatchObject({ food: null, grams: 40, kcal: 122 })
     expect(d.notes).toBe('2 L de agua al día')
     expect(document.body.textContent).toMatch('Indicaciones: 2 L de agua al día')
+  })
+
+  it('starts from a template, browses by category and types its own portion', async () => {
+    await start()
+    await click(byText('button', 'Armar dieta'))
+    const sel = $('#fj-diet-tpl')
+    Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(sel, 'volumen')
+    await act(async () => { sel.dispatchEvent(new Event('change', { bubbles: true })) }); await flush()
+    expect($('#fj-t-kcal').value).toBe('3300')
+    expect([...document.querySelectorAll('[aria-label^="Nombre de la comida"]')].map(i => i.value)).toContain('Post-entreno')
+    expect(mocks.toasts.at(-1)).toMatch('Plantilla cargada')
+    // Frutas → piña con 120 g escritos a mano, en el desayuno
+    await click(byText('button', '+ Agregar alimento'))
+    await click(withText('[role=radiogroup] button', 'Frutas'))
+    await click(withText('.fj-food-btn', 'Piña'))
+    await type($('#fj-food-g'), '120')
+    await click(withText('.fj-grams-own button', 'Agregar'))
+    await submit()
+    expect(saved().meals[0].items.at(-1)).toMatchObject({ food: 'pina', grams: 120, kcal: 60 })
+    expect(saved().meals).toHaveLength(6)
   })
 
   it('edits and deletes an existing diet', async () => {

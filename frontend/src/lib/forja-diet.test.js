@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   FOODS, foodById, itemFromFood, unitsText, mealTotals, dayTotals, versusTargets,
-  customItem, parseTargets, cleanPlan, searchFoods, kcalFromMacros, LIMITS,
+  customItem, parseTargets, cleanPlan, searchFoods, kcalFromMacros, LIMITS, FOOD_CATS, foodsIn, quickGrams, DIET_TEMPLATES, templatePlan,
 } from './forja-diet.js'
 
 describe('forja-diet — alimentos', () => {
@@ -26,7 +26,9 @@ describe('forja-diet — alimentos', () => {
   it('says the portion in household units', () => {
     expect(unitsText(itemFromFood(foodById('huevo'), 100))).toBe('≈ 2 huevos')
     expect(unitsText(itemFromFood(foodById('arepa'), 90))).toBe('≈ 1 arepa mediana')
-    expect(unitsText(itemFromFood(foodById('arroz'), 240))).toBe('≈ 1,5 tazas')
+    expect(unitsText(itemFromFood(foodById('arroz'), 240))).toBe('≈ 1½ tazas')
+    expect(unitsText(itemFromFood(foodById('aceite-oliva'), 7))).toBe('≈ ½ cucharada')
+    expect(unitsText(itemFromFood(foodById('avena'), 40))).toBe('≈ ½ taza')
     expect(unitsText(itemFromFood(foodById('pollo'), 150))).toBe('')
     expect(unitsText({ food: null, grams: 100 })).toBe('')
   })
@@ -80,5 +82,36 @@ describe('forja-diet — formularios', () => {
     expect(plan.meals[0]).toEqual({ name: 'Comida', time: '07:30', items: [{ food: null, name: 'Huevo', grams: 0, kcal: 72, protein: 0, carbs: 0, fat: 0 }] })
     expect(plan.meals[1].time).toBe('')
     expect(plan.notes).toBe('tomar agua')
+  })
+})
+
+describe('forja-diet — grilla de alimentos', () => {
+  it('every food has an icon and a category that the grid shows', () => {
+    const cats = new Set(FOOD_CATS.map(c => c.key))
+    for (const f of FOODS) { expect(f.icon, f.id).toBeTruthy(); expect(cats.has(f.cat), f.id).toBe(true) }
+    expect(FOOD_CATS.reduce((n, c) => n + foodsIn(c.key).length, 0)).toBe(FOODS.length)
+  })
+
+  it('offers quick portions that make sense for each food', () => {
+    expect(quickGrams(foodById('huevo'))).toEqual([50, 100, 150])
+    expect(quickGrams(foodById('almendras'))).toEqual([6, 12, 18, 24])
+    expect(quickGrams(foodById('arroz'))).toEqual([80, 160, 240, 320])
+    expect(quickGrams(foodById('aceite-oliva'))).toEqual([14, 28, 42])
+    expect(quickGrams(foodById('pollo'))).toEqual([50, 100, 150, 200, 250])
+    expect(quickGrams(foodById('queso-blanco'))).toEqual([30, 60, 90, 100, 150])
+  })
+})
+
+describe('forja-diet — plantillas', () => {
+  it('each template builds a plan whose totals match its label and its own targets', () => {
+    for (const t of DIET_TEMPLATES) {
+      const p = templatePlan(t.key)
+      const tot = dayTotals(p.meals)
+      const kcalLabel = Number(t.label.match(/~([\d.]+)/)[1].replace('.', ''))
+      expect(Math.abs(tot.kcal - kcalLabel), t.key).toBeLessThanOrEqual(120)
+      expect(Math.abs(tot.kcal - p.targets.kcal), t.key).toBeLessThanOrEqual(25)
+      expect(p.meals.every(m => m.items.every(i => i.kcal > 0 || i.food === 'cafe')), t.key).toBe(true)
+    }
+    expect(templatePlan('nada')).toBeNull()
   })
 })

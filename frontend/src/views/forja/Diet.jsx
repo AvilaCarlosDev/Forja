@@ -6,10 +6,10 @@ import { Button } from '../../components/ui.jsx'
 import { api } from '../../lib/forja-api.js'
 import {
   MACROS, itemFromFood, unitsText, mealTotals, dayTotals, versusTargets, customItem, parseTargets,
-  cleanPlan, starterMeals, searchFoods, LIMITS,
+  cleanPlan, starterMeals, searchFoods, LIMITS, FOOD_CATS, foodsIn, quickGrams, foodById, DIET_TEMPLATES, templatePlan,
 } from '../../lib/forja-diet.js'
 import { useUI } from '../../store/useUI.js'
-import { Field, Panel, Loading, ErrorNote, useLoad } from './parts.jsx'
+import { Field, Panel, Choice, Loading, ErrorNote, useLoad } from './parts.jsx'
 
 const toast = m => useUI.getState().toast(m)
 const fmt = v => String(Math.round(Number(v || 0) * 10) / 10).replace('.', ',')
@@ -43,19 +43,20 @@ function MealView({ meal }) {
   </li>
 }
 
-// Agregar un alimento a una comida: de la lista (con los gramos) o uno propio con sus macros.
+// Agregar un alimento a una comida: se elige en la grilla de íconos (por categoría o buscando)
+// y un toque en la porción lo agrega; o se carga un alimento propio con sus macros.
 function FoodAdder({ onAdd, onCancel }) {
+  const [cat, setCat] = useState(FOOD_CATS[0].key)
   const [q, setQ] = useState('')
   const [food, setFood] = useState(null)
   const [grams, setGrams] = useState('')
   const [own, setOwn] = useState(null)
   const [errors, setErrors] = useState({})
-  const results = searchFoods(q)
-  const pick = f => { setFood(f); setGrams(String(f.unit?.g ?? 100)) }
-  const addFood = () => {
-    const g = Number(String(grams).replace(',', '.'))
-    if (!(g > 0 && g <= 3000)) { setErrors({ grams: 'Porción: entre 1 y 3000 g' }); return }
-    onAdd(itemFromFood(food, g))
+  const list = q.trim() ? searchFoods(q, 24) : foodsIn(cat)
+  const addGrams = g => {
+    const n = Number(String(g).replace(',', '.'))
+    if (!(n > 0 && n <= 3000)) { setErrors({ grams: 'Porción: entre 1 y 3000 g' }); return }
+    onAdd(itemFromFood(food, n))
   }
   const addOwn = () => {
     const { item, errors: bad } = customItem(own)
@@ -78,35 +79,37 @@ function FoodAdder({ onAdd, onCancel }) {
     <div className="fj-row"><Button variant="primary" size="sm" type="button" onClick={addOwn}>Agregar</Button>
       <Button size="sm" type="button" onClick={() => setOwn(null)}>Volver a la lista</Button></div>
   </div>
+  if (food) return <div className="fj-adder">
+    <p className="fj-p fj-food-picked"><span aria-hidden="true">{food.icon}</span> <b>{food.name}</b></p>
+    <div className="fj-grams" role="group" aria-label="Porción">
+      {quickGrams(food).map(g => <button key={g} type="button" className="fj-chip" onClick={() => addGrams(g)}>
+        {fmt(g)} g{unitsText({ food: food.id, grams: g }) && <small>{unitsText({ food: food.id, grams: g }).replace('≈ ', '')}</small>}
+      </button>)}
+    </div>
+    <div className="fj-grams-own">
+      <input id="fj-food-g" className="input" inputMode="decimal" aria-label="Otra porción en gramos" placeholder="Otra (g)" value={grams}
+        onChange={e => { setGrams(e.target.value); setErrors({}) }} />
+      <Button variant="primary" size="sm" type="button" onClick={() => addGrams(grams)}>Agregar</Button>
+    </div>
+    {errors.grams && <div className="fj-err" role="alert">{errors.grams}</div>}
+    {Number(String(grams).replace(',', '.')) > 0 && <p className="dim small">{macroLine(itemFromFood(food, Number(String(grams).replace(',', '.'))))}</p>}
+    <p className="dim small">100 g: {food.kcal} kcal · P {fmt(food.p)} · C {fmt(food.c)} · G {fmt(food.f)}</p>
+    <button type="button" className="fj-link" onClick={() => setFood(null)}>Elegir otro alimento</button>
+  </div>
   return <div className="fj-adder">
-    {!food ? <>
-      <Field id="fj-food-q" label="Buscar alimento">
-        <input id="fj-food-q" className="input" autoComplete="off" placeholder="Ej.: arepa, pollo, avena" value={q} onChange={e => setQ(e.target.value)} />
-      </Field>
-      {results.length > 0 && <ul className="fj-food-results">{results.map(f => <li key={f.id}>
-        <button type="button" className="fj-item" onClick={() => pick(f)}>
-          <span className="fj-item-m"><b>{f.name}</b><span>{`100 g: ${f.kcal} kcal · P ${fmt(f.p)} · C ${fmt(f.c)} · G ${fmt(f.f)}`}</span></span>
-        </button>
-      </li>)}</ul>}
-      {q.trim() && !results.length && <p className="dim small">No está en la lista. Cárgalo como alimento propio.</p>}
-      <div className="fj-row">
-        <button type="button" className="fj-link" onClick={() => setOwn({ name: q.trim() })}>Alimento propio</button>
-        <button type="button" className="fj-link" onClick={onCancel}>Cancelar</button>
-      </div>
-    </> : <>
-      <p className="fj-p"><b>{food.name}</b></p>
-      <Field id="fj-food-g" label="Porción (g)" error={errors.grams}
-        hint={food.unit ? `1 ${food.unit.label} ≈ ${fmt(food.unit.g)} g` : undefined}>
-        <input id="fj-food-g" className="input" inputMode="decimal" value={grams} onChange={e => { setGrams(e.target.value); setErrors({}) }} />
-      </Field>
-      {Number(grams) > 0 && <p className="dim small">{macroLine(itemFromFood(food, Number(String(grams).replace(',', '.'))))}</p>}
-      <div className="fj-row"><Button variant="primary" size="sm" type="button" onClick={addFood}>Agregar</Button>
-        <Button size="sm" type="button" onClick={() => setFood(null)}>Otro alimento</Button></div>
-    </>}
+    <input id="fj-food-q" className="input" autoComplete="off" aria-label="Buscar alimento" placeholder="Buscar: arepa, pollo, avena…" value={q} onChange={e => setQ(e.target.value)} />
+    {!q.trim() && <Choice id="fj-food-cat" options={FOOD_CATS.map(c => ({ value: c.key, label: c.label }))} value={cat} onChange={setCat} />}
+    {list.length > 0 ? <div className="fj-food-grid">{list.map(f => <button key={f.id} type="button" className="fj-food-btn" onClick={() => { setFood(f); setGrams('') }}>
+      <span className="fj-food-icon" aria-hidden="true">{f.icon}</span><span>{f.name}</span>
+    </button>)}</div> : <p className="dim small">No está en la lista. Cárgalo como alimento propio.</p>}
+    <div className="fj-row">
+      <button type="button" className="fj-link" onClick={() => setOwn({ name: q.trim() })}>Alimento propio</button>
+      <button type="button" className="fj-link" onClick={onCancel}>Cancelar</button>
+    </div>
   </div>
 }
 
-function DietEditor({ clientId, clientName, diet, onSaved, onClose }) {
+function DietEditor({ clientId, clientName, diet, otherClients = [], onSaved, onClose }) {
   const [meals, setMeals] = useState(() => diet?.meals?.length ? structuredClone(diet.meals) : starterMeals())
   const [tf, setTf] = useState(() => Object.fromEntries(MACROS.map(m => [m.key, diet?.targets?.[m.key] ?? ''])))
   const [notes, setNotes] = useState(diet?.notes || '')
@@ -115,6 +118,20 @@ function DietEditor({ clientId, clientName, diet, onSaved, onClose }) {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const { targets, errors: tErr } = parseTargets(tf)
+  const load = (plan, what) => {
+    setMeals(structuredClone(plan.meals))
+    setTf(Object.fromEntries(MACROS.map(m => [m.key, plan.targets?.[m.key] ?? ''])))
+    if (plan.notes != null) setNotes(plan.notes || '')
+    setAdding(null); toast(`${what}: ajústala a ${clientName || 'tu cliente'} y guarda`)
+  }
+  const copyFrom = async id => {
+    if (!id) return
+    try {
+      const d = await api().diet(id)
+      if (!d) { toast('Ese cliente todavía no tiene dieta'); return }
+      load(d, 'Dieta copiada de ' + (otherClients.find(c => c.id === id)?.name || 'otro cliente'))
+    } catch (x) { toast(x.message) }
+  }
   const editMeal = (i, patch) => setMeals(ms => ms.map((m, j) => (j === i ? { ...m, ...patch } : m)))
   const save = async e => {
     e.preventDefault(); setErr('')
@@ -127,6 +144,20 @@ function DietEditor({ clientId, clientName, diet, onSaved, onClose }) {
   }
   return <Panel title={`Dieta de ${clientName || 'tu cliente'}`} onClose={onClose}>
     <form className="fj-form" onSubmit={save} noValidate>
+      <div className="fj-grid2">
+        <Field id="fj-diet-tpl" label="Empezar con una plantilla">
+          <select id="fj-diet-tpl" className="input" value="" onChange={e => { const p = templatePlan(e.target.value); if (p) load(p, 'Plantilla cargada') }}>
+            <option value="">Elegir…</option>
+            {DIET_TEMPLATES.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+          </select>
+        </Field>
+        {otherClients.length > 0 && <Field id="fj-diet-copy" label="Copiar la dieta de">
+          <select id="fj-diet-copy" className="input" value="" onChange={e => copyFrom(e.target.value)}>
+            <option value="">Elegir cliente…</option>
+            {otherClients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </Field>}
+      </div>
       <div className="fj-legend">Objetivo diario (opcional)</div>
       <div className="fj-grid2">{MACROS.map(m => <Field key={m.key} id={'fj-t-' + m.key} label={`${m.label} (${m.unit})`} error={errors[m.key]}>
         <input id={'fj-t-' + m.key} className="input" inputMode="decimal" value={tf[m.key]} onChange={e => setTf(p => ({ ...p, [m.key]: e.target.value }))} />
@@ -161,7 +192,7 @@ function DietEditor({ clientId, clientName, diet, onSaved, onClose }) {
   </Panel>
 }
 
-export default function Diet({ clientId, clientName, canEdit, pro, lockedText }) {
+export default function Diet({ clientId, clientName, canEdit, pro, lockedText, otherClients }) {
   const diet = useLoad(() => (pro ? api().diet(clientId) : null), [clientId, pro])
   const [editing, setEditing] = useState(false)
   if (!pro) return <section className="fj-card">
@@ -188,6 +219,6 @@ export default function Diet({ clientId, clientName, canEdit, pro, lockedText })
         {canEdit && <button type="button" className="fj-link danger" onClick={remove}>Borrar dieta</button>}
       </>}
     </section>
-    {editing && <DietEditor clientId={clientId} clientName={clientName} diet={d} onClose={() => setEditing(false)} onSaved={() => { setEditing(false); diet.reload() }} />}
+    {editing && <DietEditor clientId={clientId} clientName={clientName} diet={d} otherClients={otherClients} onClose={() => setEditing(false)} onSaved={() => { setEditing(false); diet.reload() }} />}
   </>
 }

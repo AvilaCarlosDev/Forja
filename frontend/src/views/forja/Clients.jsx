@@ -127,6 +127,7 @@ export function ClientDetail() {
       </div>
     </div>
     <Metrics clientId={c.id} canEdit pro={effectivePlan(row) === 'pro'} />
-    <Diet clientId={c.id} clientName={c.name} canEdit pro={effectivePlan(row) === 'pro'} />
+    <Diet clientId={c.id} clientName={c.name} canEdit pro={effectivePlan(row) === 'pro'}
+      otherClients={active.filter(l => l.client_id !== c.id).map(l => ({ id: l.client_id, name: l.client?.name || 'Cliente' }))} />
   </div>
 }
