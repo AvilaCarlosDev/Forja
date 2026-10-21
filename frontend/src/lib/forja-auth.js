@@ -27,6 +27,15 @@ export function validateSignup(f = {}) {
   return e
 }
 
+// Aviso junto al botón de crear cuenta: en el teléfono los errores de cada campo quedan fuera de
+// la vista y sin él parecía que el botón no hacía nada.
+export function signupSummary(e = {}) {
+  const msgs = Object.values(e).filter(Boolean)
+  if (!msgs.length) return ''
+  if (msgs.length === 1) return 'Falta un dato: ' + msgs[0].charAt(0).toLowerCase() + msgs[0].slice(1)
+  return 'Faltan ' + msgs.length + ' datos. Revisa lo marcado en rojo.'
+}
+
 const cleanEmail = v => String(v || '').trim().toLowerCase()
 
 // El plan no se manda nunca desde el cliente: lo fija la base (free) y solo lo cambia el admin.

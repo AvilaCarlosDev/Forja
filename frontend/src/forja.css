@@ -6,7 +6,8 @@
 .fj-form{display:flex;flex-direction:column;gap:12px}
 .fj-field{display:flex;flex-direction:column;gap:6px;text-align:start}
 .fj-field>label,.fj-legend{font-size:13px;color:var(--label-2);font-weight:500}
-.fj-err{font-size:13px;color:var(--red)}
+.fj-err{font-size:14px;font-weight:600;color:var(--red)}
+.fj-err-box{padding:10px 12px;border-radius:12px;background:rgba(255,69,58,.12);border:1px solid rgba(255,69,58,.45)}
 .fj-roles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .fj-role{display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:start;padding:14px;border-radius:var(--r-card);
   background:var(--surface);border:1.5px solid transparent;color:var(--label);cursor:pointer;font:inherit;min-width:0}

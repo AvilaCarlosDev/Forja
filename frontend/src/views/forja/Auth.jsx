@@ -8,7 +8,7 @@ import { Button } from '../../components/ui.jsx'
 import { Choice } from './parts.jsx'
 import { InstallLink } from './Install.jsx'
 import { BRAND } from '../../lib/brand.js'
-import { validateSignup, parseAuthHash } from '../../lib/forja-auth.js'
+import { validateSignup, signupSummary, parseAuthHash } from '../../lib/forja-auth.js'
 import { auth, getSession, setSession, syncSession, ROLE_LABEL } from '../../lib/forja-session.js'
 import { FORJA_AUTH_PREVIEW, LEGAL } from '../../lib/forja-config.js'
 import '../../forja.css'
@@ -127,12 +127,18 @@ function Register({ go, onSent }) {
   const [errors, setErrors] = useState({})
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
-  const set = (k, v) => { setF(p => ({ ...p, [k]: v })); setErrors(p => ({ ...p, [k]: undefined })) }
+  const set = (k, v) => { setF(p => ({ ...p, [k]: v })); setErrors(p => ({ ...p, [k]: undefined })); setErr('') }
   const submit = async e => {
     e.preventDefault(); setErr('')
     const bad = validateSignup(f)
     setErrors(bad)
-    if (Object.keys(bad).length) { (document.getElementById('fj-reg-' + Object.keys(bad)[0] + '-first') || document.getElementById('fj-reg-' + Object.keys(bad)[0]))?.focus?.(); return }
+    if (Object.keys(bad).length) {
+      setErr(signupSummary(bad))
+      const k = Object.keys(bad)[0]
+      const el = document.getElementById('fj-reg-' + k + '-first') || document.getElementById('fj-reg-' + k)
+      el?.scrollIntoView?.({ block: 'center', behavior: 'smooth' }); el?.focus?.({ preventScroll: true })
+      return
+    }
     if (FORJA_AUTH_PREVIEW) {
       const profile = { id: 'preview', email: f.email.trim().toLowerCase(), name: f.name.trim(), sex: f.sex, role: f.role }
       setSession({ access_token: 'preview', refresh_token: '', expires_at: 0, preview: true, profile })
@@ -183,7 +189,7 @@ function Register({ go, onSent }) {
       </div>
       <Accept id="fj-reg-accept" checked={f.accept} onChange={v => set('accept', v)} error={errors.accept} />
       {f.role === 'trainer' && <div className="fj-note">Empiezas en el plan Free, con hasta 5 clientes. El plan Pro es solo para entrenadores; tus clientes nunca pagan.</div>}
-      {err && <div className="fj-err" role="alert">{err}</div>}
+      {err && <div className="fj-err fj-err-box" role="alert">{err}</div>}
       <Button variant="primary" type="submit" disabled={busy}>{busy ? 'Creando cuenta…' : 'Crear cuenta'}</Button>
     </form>
     <div className="fj-links"><div className="muted">¿Ya tienes cuenta? <button type="button" onClick={() => go('login')}>Entrar</button></div></div>
