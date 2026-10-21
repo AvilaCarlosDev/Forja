@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, beforeEach } from 'vitest'
 import {
-  ROLES, SEXES, validateSignup, signupBody, parseAuthHash, profileFromUser, errorMessage,
+  ROLES, SEXES, validateSignup, signupSummary, signupBody, parseAuthHash, profileFromUser, errorMessage,
   createAuth, loadSession, saveSession, SESSION_KEY,
 } from './forja-auth.js'
 
@@ -26,6 +26,16 @@ describe('validateSignup', () => {
     expect(validateSignup({ ...good, sex: 'x' }).sex).toBeTruthy()
   })
   it('does not go ahead without the terms', () => { expect(validateSignup({ ...good, accept: false }).accept).toBeTruthy() })
+})
+
+describe('signupSummary', () => {
+  it('says nothing when the form is complete', () => { expect(signupSummary({})).toBe('') })
+  it('repeats the one thing that is missing next to the button', () => {
+    expect(signupSummary(validateSignup({ ...good, accept: false }))).toBe('Falta un dato: debes aceptar los términos y la política de privacidad')
+  })
+  it('counts several missing things', () => {
+    expect(signupSummary(validateSignup({ ...good, sex: '', accept: false }))).toBe('Faltan 2 datos. Revisa lo marcado en rojo.')
+  })
 })
 
 describe('signupBody', () => {
