@@ -34,10 +34,17 @@
     "@capacitor/cli": "^7.6.9",
     "@capacitor/ios": "^7.6.9",
     "@vitejs/plugin-react": "^6.0.3",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^5.0.5",
     "happy-dom": "^20.11.2",
     "linkedom": "^0.18.13",
     "vite": "^8.1.5",
-    "vitest": "^4.1.10"
+    "vitest": "^5.0.5"
+  },
+  "overrides": {
+    "tar": "^7.5.22",
+    "sharp": "^0.35.5",
+    "@trapezedev/project": "^7.1.11",
+    "xcode": "^4.0.0",
+    "uuid": "^11.1.1"
   }
 }
