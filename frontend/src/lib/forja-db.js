@@ -66,8 +66,9 @@ export function createDb({ url, key, getToken, refresh, fetch: f = globalThis.fe
     // Borra las filas que cumplan el filtro de PostgREST (por ejemplo 'id=eq.1').
     del: (table, query) => send(rest + table + '?' + query, { method: 'DELETE' }),
     rpc: (fn, args = {}) => send(rest + 'rpc/' + fn, { method: 'POST', body: args }),
-    upload: (bucket, path, blob, contentType) => send('/storage/v1/object/' + bucket + '/' + path, {
-      method: 'POST', body: blob, raw: true, headers: { 'Content-Type': contentType, 'x-upsert': 'true' },
+    // upsert: reemplaza si ya existe; el bucket necesita además permisos de leer y actualizar.
+    upload: (bucket, path, blob, contentType, { upsert = true } = {}) => send('/storage/v1/object/' + bucket + '/' + path, {
+      method: 'POST', body: blob, raw: true, headers: { 'Content-Type': contentType, ...(upsert ? { 'x-upsert': 'true' } : {}) },
     }),
     remove: (bucket, paths) => send('/storage/v1/object/' + bucket, { method: 'DELETE', body: { prefixes: paths } }),
     async signedUrl(bucket, path, expiresIn = 3600) {

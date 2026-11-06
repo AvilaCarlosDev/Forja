@@ -24,6 +24,17 @@ describe('dbErrorMessage', () => {
 })
 
 describe('createDb', () => {
+  // El bucket de logos solo permite subir (INSERT). Con x-upsert, Storage exige además permisos de
+  // leer y reemplazar, y responde 403 aunque el archivo sea nuevo.
+  it('upload solo manda x-upsert si no se desactiva', async () => {
+    const { f, calls } = fakeFetch(reply(200, {}), reply(200, {}))
+    const db = createDb(opts(f))
+    await db.upload('avatars', 'u1/a.webp', new Blob(['x']), 'image/webp')
+    expect(calls[0].init.headers['x-upsert']).toBe('true')
+    await db.upload('gym-logos', 'u1/l.webp', new Blob(['x']), 'image/webp', { upsert: false })
+    expect(calls[1].init.headers['x-upsert']).toBeUndefined()
+  })
+
   const opts = (f, token = 't1', refresh) => ({ url: 'https://x.supabase.co/', key: 'anon', getToken: () => token, refresh, fetch: f })
 
   it('reads one row with the session token and the public key', async () => {

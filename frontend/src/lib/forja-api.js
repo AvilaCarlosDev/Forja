@@ -22,7 +22,7 @@ export const remoteApi = {
     let logo_path = null
     if (logo) {
       logo_path = `${me()}/logo-${Date.now()}.webp`
-      await db.upload('gym-logos', logo_path, logo, 'image/webp')
+      await db.upload('gym-logos', logo_path, logo, 'image/webp', { upsert: false })
     }
     return db.insert('gyms', { name: name.trim(), branch: branch?.trim() || null, address: address?.trim() || null, social_url: social_url || null, logo_path, created_by: me() })
   },

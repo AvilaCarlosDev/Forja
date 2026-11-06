@@ -225,6 +225,15 @@ afterEach(async () => {
 })
 
 describe('Stats muscle recovery view runtime', () => {
+  it('shows the Fatigue body map before the first workout', async () => {
+    mocks.S.workouts = []
+    await mountStats()
+    const fatigue = [...container.querySelectorAll('button')].find(b => /^(Fatigue|Fatiga)$/.test(b.textContent.trim()))
+    expect(fatigue).toBeTruthy()
+    await click(fatigue)
+    expect(mocks.maps.length).toBeGreaterThan(0)
+  })
+
   it('dispatches real clicks through Balance, Fatigue, and Strength and preserves selection', async () => {
     await mountStats()
     expectPressed(viewButton('Muscle balance'))
